@@ -1,0 +1,2399 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BSS Plant Engineering Management System | EAM & CMMS</title>
+
+  <!-- Bootstrap 5, Font Awesome, DataTables, Chart.js, SweetAlert2, QRCode.js -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
+  <link href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <style>
+    :root {
+      --bss-primary: #0b3b75;
+      --bss-primary-light: #1557a8;
+      --bss-accent: #0099ff;
+      --bss-bg: #f1f5f9;
+      --bss-surface: #ffffff;
+      --bss-text: #1e293b;
+      --bss-muted: #64748b;
+      --bss-border: #e2e8f0;
+      --sidebar-width: 265px;
+    }
+
+    [data-theme="dark"] {
+      --bss-primary: #0f172a;
+      --bss-primary-light: #1e3a8a;
+      --bss-accent: #38bdf8;
+      --bss-bg: #0b1120;
+      --bss-surface: #111827;
+      --bss-text: #f1f5f9;
+      --bss-muted: #94a3b8;
+      --bss-border: #1e293b;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+      background-color: var(--bss-bg);
+      color: var(--bss-text);
+      margin: 0;
+      overflow-x: hidden;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: var(--sidebar-width);
+      background: linear-gradient(180deg, #07264d 0%, #0b3b75 100%);
+      color: #fff;
+      z-index: 1040;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s ease;
+      box-shadow: 4px 0 18px rgba(0,0,0,0.15);
+    }
+    .sidebar-brand {
+      padding: 1.15rem 1.25rem;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .brand-badge {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, #0099ff, #38bdf8);
+      border-radius: 10px;
+      display: grid; place-items: center;
+      font-weight: 800; font-size: 1.1rem; color: #062040;
+    }
+    .sidebar-menu {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.75rem 0.65rem;
+    }
+    .sidebar-menu::-webkit-scrollbar { width: 5px; }
+    .sidebar-menu::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+    .nav-section-label {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: rgba(255,255,255,0.55);
+      padding: 0.75rem 0.75rem 0.3rem;
+      font-weight: 700;
+    }
+    .nav-link-bss {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      padding: 0.58rem 0.85rem;
+      color: rgba(255,255,255,0.85);
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 0.87rem;
+      font-weight: 500;
+      margin-bottom: 2px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .nav-link-bss:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .nav-link-bss.active {
+      background: linear-gradient(90deg, #0099ff, #0284c7);
+      color: #fff;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0, 153, 255, 0.35);
+    }
+    .nav-link-bss i { width: 18px; text-align: center; }
+
+    /* Main Content & Top Navbar */
+    .main-wrapper {
+      margin-left: var(--sidebar-width);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      transition: margin-left 0.3s ease;
+    }
+    .topbar {
+      background: var(--bss-surface);
+      border-bottom: 1px solid var(--bss-border);
+      padding: 0.7rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 1030;
+    }
+    .card-bss {
+      background: var(--bss-surface);
+      border: 1px solid var(--bss-border);
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(11, 59, 117, 0.1); }
+    .kpi-icon {
+      width: 46px; height: 46px;
+      border-radius: 11px;
+      display: grid; place-items: center;
+      font-size: 1.25rem;
+    }
+
+    /* Status Badges */
+    .badge-RUNNING { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+    .badge-STANDBY { background: #fef9c3; color: #a16207; border: 1px solid #fde047; }
+    .badge-BREAKDOWN { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+    .badge-NORMAL { background: #dcfce7; color: #15803d; }
+    .badge-CAUTION { background: #fef3c7; color: #b45309; }
+    .badge-CRITICAL { background: #fee2e2; color: #b91c1c; }
+
+    /* Global Search Dropdown */
+    .search-results-box {
+      position: absolute;
+      top: 100%; left: 0; right: 0;
+      background: var(--bss-surface);
+      border: 1px solid var(--bss-border);
+      border-radius: 10px;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+      max-height: 360px;
+      overflow-y: auto;
+      z-index: 1055;
+      display: none;
+    }
+
+    /* Login Overlay */
+    #loginScreen {
+      position: fixed; inset: 0;
+      background: radial-gradient(circle at top right, #0f4c97, #04152d);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .module-view { display: none; animation: fadeIn 0.25s ease; }
+    .module-view.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    [data-theme="dark"] .table { color: #e2e8f0; border-color: #1e293b; }
+    [data-theme="dark"] .form-control, [data-theme="dark"] .form-select {
+      background-color: #1e293b; border-color: #334155; color: #f8fafc;
+    }
+
+    @media (max-width: 992px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main-wrapper { margin-left: 0; }
+    }
+    @media print {
+      .sidebar, .topbar, .no-print { display: none !important; }
+      .main-wrapper { margin-left: 0 !important; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ========================================================================
+     1. ENTERPRISE LOGIN & RBAC GATEWAY
+========================================================================= -->
+<div id="loginScreen">
+  <div class="card-bss p-4 p-md-5" style="max-width: 460px; width: 100%; background: #ffffff; color: #0f172a;">
+    <div class="text-center mb-4">
+      <div class="d-inline-flex align-items-center justify-content-center rounded-3 mb-2" style="width:58px;height:58px;background:#0b3b75;color:#38bdf8;font-size:1.6rem;">
+        <i class="fa-solid fa-gears"></i>
+      </div>
+      <h4 class="fw-bold mb-1" style="color:#0b3b75;">BSS PLANT ENGINEERING</h4>
+      <p class="text-muted small mb-0">Enterprise Asset Management & Heavy Fleet CMMS</p>
+    </div>
+
+    <form id="loginForm">
+      <div class="mb-3">
+        <label class="form-label small fw-semibold">Corporate Email / Role Profile</label>
+        <select id="loginRolePreset" class="form-select mb-2" onchange="applyRolePreset()">
+          <option value="admin@bss-mining.com">Admin — Ir. Hendra Wijaya (Full Access)</option>
+          <option value="engineer@bss-mining.com">Plant Engineer — Rizky Pratama (Approve & Analytics)</option>
+          <option value="planner@bss-mining.com">Maintenance Planner — Dian Kusuma (Schedule & WO)</option>
+          <option value="supervisor@bss-mining.com">Supervisor — Bambang Sutrisno (Field Approval)</option>
+          <option value="foreman@bss-mining.com">Foreman — Agus Setiawan (Execution & PAP)</option>
+          <option value="mechanic@bss-mining.com">Mechanic — Joko Susilo (WO & Checklists)</option>
+          <option value="guest@bss-mining.com">Guest — Executive Observer (Read Only)</option>
+        </select>
+        <input type="email" id="loginEmail" class="form-control" value="admin@bss-mining.com" required />
+      </div>
+      <div class="mb-3">
+        <label class="form-label small fw-semibold">Password</label>
+        <input type="password" id="loginPassword" class="form-control" value="BSS@Admin2026" required />
+      </div>
+      <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold" style="background:#0b3b75;border:none;">
+        <i class="fa-solid fa-shield-halved me-2"></i>Authenticate to Plant EAM
+      </button>
+    </form>
+    <div class="mt-3 pt-3 border-top text-center small text-muted">
+      <i class="fa-solid fa-lock text-success me-1"></i> JWT + RBAC + Audit Trail Protected
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================================
+     2. SIDEBAR NAVIGATION
+========================================================================= -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-badge">BSS</div>
+    <div>
+      <div class="fw-bold lh-1" style="font-size:0.95rem;">BSS PLANT EAM</div>
+      <small style="font-size:0.7rem;color:#7dd3fc;">Mining Fleet CMMS v4.2</small>
+    </div>
+  </div>
+
+  <div class="sidebar-menu">
+    <div class="nav-section-label">Executive & AI</div>
+    <a class="nav-link-bss active" data-target="dashboard"><i class="fa-solid fa-gauge-high"></i> Main Dashboard</a>
+    <a class="nav-link-bss" data-target="ai-predictive"><i class="fa-solid fa-brain"></i> AI RUL & Risk Engine</a>
+
+    <div class="nav-section-label">Asset & Telemetry</div>
+    <a class="nav-link-bss" data-target="units"><i class="fa-solid fa-truck-monster"></i> Unit Population & Master</a>
+    <a class="nav-link-bss" data-target="condition"><i class="fa-solid fa-heart-pulse"></i> Condition & Inova Index</a>
+    <a class="nav-link-bss" data-target="oil"><i class="fa-solid fa-flask-vial"></i> Oil Analysis Lab</a>
+    <a class="nav-link-bss" data-target="vhms"><i class="fa-solid fa-satellite-dish"></i> VHMS Telemetry Alarms</a>
+
+    <div class="nav-section-label">Maintenance Execution</div>
+    <a class="nav-link-bss" data-target="pap"><i class="fa-solid fa-clipboard-check"></i> PAP Inspection</a>
+    <a class="nav-link-bss" data-target="ppm"><i class="fa-solid fa-screwdriver-wrench"></i> PPM Preventive Maint.</a>
+    <a class="nav-link-bss" data-target="workorders"><i class="fa-solid fa-wrench"></i> Work Orders</a>
+    <a class="nav-link-bss" data-target="failure"><i class="fa-solid fa-triangle-exclamation"></i> Failure Analysis (FAR/RCA)</a>
+    <a class="nav-link-bss" data-target="schedule"><i class="fa-solid fa-calendar-days"></i> Maintenance Schedule</a>
+
+    <div class="nav-section-label">Supply Chain & Finance</div>
+    <a class="nav-link-bss" data-target="inventory"><i class="fa-solid fa-boxes-stacked"></i> Inventory & Stock Card</a>
+    <a class="nav-link-bss" data-target="cost"><i class="fa-solid fa-coins"></i> Equipment Cost Ledger</a>
+    <a class="nav-link-bss" data-target="documents"><i class="fa-solid fa-folder-open"></i> Document Control</a>
+    <a class="nav-link-bss" data-target="reports"><i class="fa-solid fa-file-chart-column"></i> Reports & Bulk Export</a>
+
+    <div class="nav-section-label">Administration</div>
+    <a class="nav-link-bss" data-target="profile"><i class="fa-solid fa-id-card"></i> User Profile & Logs</a>
+    <a class="nav-link-bss" data-target="settings"><i class="fa-solid fa-sliders"></i> System Settings</a>
+  </div>
+</aside>
+
+<!-- ========================================================================
+     3. MAIN CONTENT WORKSPACE
+========================================================================= -->
+<div class="main-wrapper">
+  <!-- Top Navbar -->
+  <header class="topbar no-print">
+    <div class="d-flex align-items-center gap-3 flex-grow-1">
+      <button class="btn btn-outline-secondary btn-sm d-lg-none" onclick="document.getElementById('sidebar').classList.toggle('open')">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+
+      <!-- Global Multi-Module Search -->
+      <div class="position-relative flex-grow-1" style="max-width: 440px;">
+        <div class="input-group input-group-sm">
+          <span class="input-group-text bg-transparent"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+          <input type="text" id="globalSearchInput" class="form-control" placeholder="Global Search: Unit Code, WO#, Lab Sample, Part#, FAR#..." onkeyup="handleGlobalSearch(this.value)" />
+        </div>
+        <div id="globalSearchResults" class="search-results-box p-2"></div>
+      </div>
+    </div>
+
+    <div class="d-flex align-items-center gap-2 gap-md-3">
+      <span class="badge bg-primary-subtle text-primary border border-primary-subtle d-none d-md-inline-block" id="livePipelineBadge">
+        <i class="fa-solid fa-link me-1"></i>System Synced
+      </span>
+
+      <!-- Theme Toggle -->
+      <button class="btn btn-sm btn-outline-secondary" onclick="toggleTheme()" title="Toggle Light/Dark Mode">
+        <i class="fa-solid fa-circle-half-stroke"></i>
+      </button>
+
+      <!-- Notifications -->
+      <div class="dropdown">
+        <button class="btn btn-sm btn-outline-secondary position-relative" data-bs-toggle="dropdown">
+          <i class="fa-solid fa-bell"></i>
+          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notifCountBadge">3</span>
+        </button>
+        <div class="dropdown-menu dropdown-menu-end p-2 shadow" style="width: 330px; max-height: 360px; overflow-y: auto;" id="notifDropdownList"></div>
+      </div>
+
+      <!-- Current User & Role Badge -->
+      <div class="d-flex align-items-center gap-2 border-start ps-2">
+        <div class="text-end d-none d-sm-block">
+          <div class="fw-semibold small lh-1" id="navUserName">Ir. Hendra Wijaya</div>
+          <span class="badge bg-info text-dark" style="font-size:0.65rem;" id="navUserRole">Admin</span>
+        </div>
+        <button class="btn btn-sm btn-outline-danger" onclick="logoutSystem()" title="Logout">
+          <i class="fa-solid fa-right-from-bracket"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="p-3 p-md-4 flex-grow-1">
+
+    <!-- ====================================================================
+         MODULE 1: MAIN EXECUTIVE DASHBOARD
+    ===================================================================== -->
+    <section id="view-dashboard" class="module-view active">
+      <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+        <div>
+          <h4 class="fw-bold mb-0">Plant Engineering Command Center</h4>
+          <small class="text-muted">Real-time Fleet Availability, Condition Monitoring, Maintenance Execution & Cost Telemetry</small>
+        </div>
+        <div class="d-flex gap-2 no-print">
+          <button class="btn btn-sm btn-outline-primary" onclick="exportDashboardExcel()"><i class="fa-solid fa-file-excel me-1"></i>Export KPI Report</button>
+          <button class="btn btn-sm btn-primary" style="background:#0b3b75;" onclick="window.print()"><i class="fa-solid fa-print me-1"></i>Print Briefing</button>
+        </div>
+      </div>
+
+      <!-- Primary Fleet Status & Reliability KPIs -->
+      <div class="row g-3 mb-3">
+        <div class="col-6 col-md-4 col-xl-2">
+          <div class="card-bss kpi-card p-3 h-100">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <div class="text-muted small fw-semibold">Total Population</div>
+                <h3 class="fw-bold mb-0 mt-1" id="kpiTotalUnits">0</h3>
+              </div>
+              <div class="kpi-icon bg-primary-subtle text-primary"><i class="fa-solid fa-truck-monster"></i></div>
+            </div>
+            <small class="text-success fw-semibold mt-2 d-block"><span id="kpiRunning">0</span> Running • <span id="kpiStandby">0</span> Standby</small>
+          </div>
+        </div>
+
+        <div class="col-6 col-md-4 col-xl-2">
+          <div class="card-bss kpi-card p-3 h-100">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <div class="text-muted small fw-semibold">Breakdown Units</div>
+                <h3 class="fw-bold text-danger mb-0 mt-1" id="kpiBreakdown">0</h3>
+              </div>
+              <div class="kpi-icon bg-danger-subtle text-danger"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            </div>
+            <small class="text-muted mt-2 d-block">Active VHMS Alarms: <strong id="kpiAlarms" class="text-danger">0</strong></small>
+          </div>
+        </div>
+
+        <div class="col-6 col-md-4 col-xl-2">
+          <div class="card-bss kpi-card p-3 h-100">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <div class="text-muted small fw-semibold">Physical Avail. (PA)</div>
+                <h3 class="fw-bold text-primary mb-0 mt-1" id="kpiPA">0%</h3>
+              </div>
+              <div class="kpi-icon bg-info-subtle text-info"><i class="fa-solid fa-chart-line"></i></div>
+            </div>
+            <small class="text-muted mt-2 d-block">Reliability ($R_{24h}$): <strong id="kpiReliability">0%</strong></small>
+          </div>
+        </div>
+
+        <div class="col-6 col-md-4 col-xl-2">
+          <div class="card-bss kpi-card p-3 h-100">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <div class="text-muted small fw-semibold">MTBF / MTTR</div>
+                <h5 class="fw-bold mb-0 mt-1"><span id="kpiMTBF">0</span>h / <span id="kpiMTTR">0</span>h</h5>
+              </div>
+              <div class="kpi-icon bg-warning-subtle text-warning"><i class="fa-solid fa-stopwatch"></i></div>
+            </div>
+            <small class="text-muted mt-2 d-block">Target MTBF &gt; 350h | MTTR &lt; 4h</small>
+          </div>
+        </div>
+
+        <div class="col-6 col-md-4 col-xl-2">
+          <div class="card-bss kpi-card p-3 h-100">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <div class="text-muted small fw-semibold">PPM / PAP Achv.</div>
+                <h5 class="fw-bold text-success mb-0 mt-1"><span id="kpiPPM">0%</span> / <span id="kpiPAP">0%</span></h5>
+              </div>
+              <div class="kpi-icon bg-success-subtle text-success"><i class="fa-solid fa-clipboard-check"></i></div>
+            </div>
+            <small class="text-muted mt-2 d-block">Oil Health Normal: <strong id="kpiOilHealth">0%</strong></small>
+          </div>
+        </div>
+
+        <div class="col-6 col-md-4 col-xl-2">
+          <div class="card-bss kpi-card p-3 h-100">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <div class="text-muted small fw-semibold">YTD Maint. Cost</div>
+                <h5 class="fw-bold mb-0 mt-1" id="kpiTotalCost">$0</h5>
+              </div>
+              <div class="kpi-icon bg-secondary-subtle text-secondary"><i class="fa-solid fa-coins"></i></div>
+            </div>
+            <small class="text-muted mt-2 d-block">Top Cost: <strong id="kpiTopCostUnit">-</strong></small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Charts Row 1 -->
+      <div class="row g-3 mb-3">
+        <div class="col-lg-6">
+          <div class="card-bss p-3 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h6 class="fw-bold mb-0"><i class="fa-solid fa-chart-area text-primary me-2"></i>Fleet Availability & Reliability Trend (%)</h6>
+              <span class="badge bg-light text-dark border">Monthly KPI</span>
+            </div>
+            <div style="height: 250px;"><canvas id="chartAvailability"></canvas></div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="card-bss p-3 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h6 class="fw-bold mb-0"><i class="fa-solid fa-sack-dollar text-success me-2"></i>Maintenance Cost Breakdown by Category (USD)</h6>
+              <span class="badge bg-light text-dark border">Live Ledger</span>
+            </div>
+            <div style="height: 250px;"><canvas id="chartCostTrend"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Charts Row 2 -->
+      <div class="row g-3 mb-3">
+        <div class="col-lg-4">
+          <div class="card-bss p-3 h-100">
+            <h6 class="fw-bold mb-2"><i class="fa-solid fa-flask text-warning me-2"></i>Oil Analysis Health & Wear Trend</h6>
+            <div style="height: 220px;"><canvas id="chartOilTrend"></canvas></div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card-bss p-3 h-100">
+            <h6 class="fw-bold mb-2"><i class="fa-solid fa-wrench text-danger me-2"></i>Top Failure Modes & Downtime (Hrs)</h6>
+            <div style="height: 220px;"><canvas id="chartFailureTrend"></canvas></div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card-bss p-3 h-100">
+            <h6 class="fw-bold mb-2"><i class="fa-solid fa-list-check text-info me-2"></i>PPM & PAP Compliance vs Target</h6>
+            <div style="height: 220px;"><canvas id="chartPpmPap"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upcoming Schedule & Live Inter-Module Activity Feed -->
+      <div class="row g-3">
+        <div class="col-lg-6">
+          <div class="card-bss p-3 h-100">
+            <h6 class="fw-bold mb-3"><i class="fa-solid fa-calendar-check text-primary me-2"></i>Upcoming Critical Schedules (PPM / Overhaul / Sampling)</h6>
+            <div class="table-responsive">
+              <table class="table table-sm table-hover align-middle mb-0" id="dashScheduleTable">
+                <thead class="table-light">
+                  <tr><th>Unit</th><th>Activity</th><th>Target HM / Date</th><th>Status</th></tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="card-bss p-3 h-100">
+            <h6 class="fw-bold mb-3"><i class="fa-solid fa-bolt text-warning me-2"></i>Real-Time Automated Pipeline & Audit Activity</h6>
+            <div id="dashActivityFeed" class="d-flex flex-column gap-2" style="max-height: 250px; overflow-y: auto;"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         MODULE 2: UNIT POPULATION & MASTER DATA
+    ===================================================================== -->
+    <section id="view-units" class="module-view">
+      <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+        <div>
+          <h4 class="fw-bold mb-0">Unit Population & Equipment Master Data</h4>
+          <small class="text-muted">Complete heavy mining fleet registry with QR labeling, HM/KM telemetry, and bulk Excel import/export</small>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-sm btn-outline-success" onclick="exportTableToExcel('units', 'BSS_Unit_Population')"><i class="fa-solid fa-file-excel me-1"></i>Export Excel</button>
+          <button class="btn btn-sm btn-outline-secondary" onclick="triggerBulkUnitImport()"><i class="fa-solid fa-file-import me-1"></i>Bulk Import CSV/Excel</button>
+          <input type="file" id="bulkUnitFileInput" accept=".csv,.xlsx" class="d-none" onchange="handleBulkUnitFile(event)" />
+          <button class="btn btn-sm btn-primary perm-create" style="background:#0b3b75;" data-bs-toggle="modal" data-bs-target="#addUnitModal">
+            <i class="fa-solid fa-plus me-1"></i>Register New Unit
+          </button>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="card-bss p-3 mb-3">
+        <div class="row g-2">
+          <div class="col-md-3">
+            <select id="filterUnitStatus" class="form-select form-select-sm" onchange="renderUnitsTable()">
+              <option value="">All Operational Statuses</option>
+              <option value="RUNNING">RUNNING</option>
+              <option value="STANDBY">STANDBY</option>
+              <option value="BREAKDOWN">BREAKDOWN</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <select id="filterUnitCategory" class="form-select form-select-sm" onchange="renderUnitsTable()">
+              <option value="">All Equipment Categories</option>
+              <option value="Excavator">Excavator</option>
+              <option value="Dump Truck">Dump Truck</option>
+              <option value="Bulldozer">Bulldozer</option>
+              <option value="Motor Grader">Motor Grader</option>
+              <option value="Drill Rig">Drill Rig</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <select id="filterUnitPit" class="form-select form-select-sm" onchange="renderUnitsTable()">
+              <option value="">All Sites / Pits</option>
+              <option value="Pit North">Pit North (Cluster Alpha)</option>
+              <option value="Pit South">Pit South (Cluster Bravo)</option>
+              <option value="Pit West">Pit West (Cluster Charlie)</option>
+            </select>
+          </div>
+          <div class="col-md-3 text-end">
+            <button class="btn btn-sm btn-outline-primary w-100" onclick="resetUnitFilters()"><i class="fa-solid fa-rotate-left me-1"></i>Reset Filters</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-bss p-3">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle w-100" id="unitsDataTable">
+            <thead class="table-light">
+              <tr>
+                <th>Unit Code</th>
+                <th>Category & Model</th>
+                <th>Manufacturer / S/N</th>
+                <th>Location (Pit / Cluster)</th>
+                <th>Cost Center</th>
+                <th>Current HM / KM</th>
+                <th>Fuel</th>
+                <th>Status</th>
+                <th>AI Risk</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="unitsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         MODULE 3: CONDITION MONITORING & INOVA INDEX
+    ===================================================================== -->
+    <section id="view-condition" class="module-view">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h4 class="fw-bold mb-0">Condition Monitoring & Inova Health Index</h4>
+          <small class="text-muted">Integrated health scoring combining Oil Analysis, VHMS Telemetry, Undercarriage/Tyre, and Structural Audits</small>
+        </div>
+        <button class="btn btn-sm btn-primary perm-create" style="background:#0b3b75;" onclick="openQuickInovaModal()">
+          <i class="fa-solid fa-plus me-1"></i>Record Inova Assessment
+        </button>
+      </div>
+
+      <div class="row g-3 mb-3" id="inovaCardsContainer"></div>
+
+      <div class="card-bss p-3">
+        <h6 class="fw-bold mb-2">Multi-System Health Radar & Degradation Comparison</h6>
+        <div style="height: 280px;"><canvas id="chartInovaHealth"></canvas></div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         MODULE 4: OIL ANALYSIS LAB (WITH AUTO-DIAGNOSIS & AUTO-WO)
+    ===================================================================== -->
+    <section id="view-oil" class="module-view">
+      <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+        <div>
+          <h4 class="fw-bold mb-0">Tribology & Oil Analysis Laboratory</h4>
+          <small class="text-muted">Automated wear metal ($Fe, Cu, Cr, Pb, Al, Sn, Ni$), contamination ($Si, Na, K$), PQ Index evaluation & auto-Work Order trigger</small>
+        </div>
+        <button class="btn btn-sm btn-primary perm-create" style="background:#0b3b75;" data-bs-toggle="modal" data-bs-target="#addOilModal">
+          <i class="fa-solid fa-flask-vial me-1"></i>Submit Lab Result
+        </button>
+      </div>
+
+      <div class="card-bss p-3">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover align-middle" id="oilDataTable">
+            <thead class="table-light">
+              <tr>
+                <th>Sample #</th>
+                <th>Unit</th>
+                <th>Compartment</th>
+                <th>Oil Grade / Hrs</th>
+                <th>Fe / Cu / Pb (ppm)</th>
+                <th>Si / Na / K (ppm)</th>
+                <th>PQ / Visc 100°C</th>
+                <th>Status</th>
+                <th>Auto Conclusion & Linked WO</th>
+              </tr>
+            </thead>
+            <tbody id="oilTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         MODULE 5: VHMS TELEMETRY ALARMS
+    ===================================================================== -->
+    <section id="view-vhms" class="module-view">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h4 class="fw-bold mb-0">VHMS (Vehicle Health Monitoring System) Alarms</h4>
+          <small class="text-muted">Real-time ECM/Controller fault codes — Critical alarms automatically trigger Breakdown status & Emergency Work Orders</small>
+        </div>
+        <button class="btn btn-sm btn-danger perm-create" data-bs-toggle="modal" data-bs-target="#addVhmsModal">
+          <i class="fa-solid fa-satellite-dish me-1"></i>Simulate / Log VHMS Fault
+        </button>
+      </div>
+
+      <div class="card-bss p-3">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Timestamp</th>
+                <th>Unit</th>
+                <th>Fault Code</th>
+                <th>Component</th>
+                <th>Description</th>
+                <th>Reading / Limit</th>
+                <th>Severity</th>
+                <th>Status / Linked WO</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="vhmsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         MODULE 6: PAP (PROGRAM ANALISA PERAWATAN / INSPECTION)
+    ===================================================================== -->
+    <section id="view-pap" class="module-view">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h4 class="fw-bold mb-0">PAP — Field Inspection & Finding Verification</h4>
+          <small class="text-muted">Daily walkaround, magnetic plug, filter cut, and undercarriage inspections with automatic corrective WO routing</small>
+        </div>
+        <button class="btn btn-sm btn-primary perm-create" style="background:#0b3b75;" data-bs-toggle="modal" data-bs-target="#addPapModal">
+          <i class="fa-solid fa-clipboard-check me-1"></i>New PAP Inspection
+        </button>
+      </div>
+
+      <div class="card-bss p-3">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>PAP #</th>
+                <th>Date</th>
+                <th>Unit</th>
+                <th>Inspection Type</th>
+                <th>Result</th>
+                <th>Finding & Corrective Action</th>
+                <th>PIC & Due Date</th>
+                <th>Verification</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="papTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         MODULE 7: PPM (PLANNED PREVENTIVE MAINTENANCE)
+    ===================================================================== -->
+    <section id="view-ppm" class="module-view">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h4 class="fw-bold mb-0">PPM — Planned Preventive Maintenance Execution</h4>
+          <small class="text-muted">250H / 500H / 1000H / 2000H periodic service intervals, technician digital checklists, and supervisor sign-off</small>
+        </div>
+        <button class="btn btn-sm btn-primary perm-create" style="background:#0b3b75;" onclick="scheduleNewPPM()">
+          <i class="fa-solid fa-calendar-plus me-1"></i>Schedule PPM Service
+        </button>
+      </div>
+
+      <div class="card-bss p-3">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>PPM Code</th>
+                <th>Unit</th>
+                <th>Service Interval</th>
+                <th>Planned HM</th>
+                <th>Scheduled Date</th>
+                <th>Checklist Progress</th>
+                <th>Technician</th>
+                <th>Status</th>
+                <th>Execute / Sign</th>
+              </tr>
+            </thead>
+            <tbody id="ppmTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         MODULE 8: WORK ORDERS
+    ===================================================================== -->
+    <section id="view-workorders" class="module-view">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h4 class="fw-bold mb-0">Work Order Management & Execution Hub</h4>
+          <small class="text-muted">Centralized Breakdown, Preventive, Corrective, and Predictive Work Orders linked to Inventory, Cost, and Unit Status</small>
+        </div>
+        <button class="btn btn-sm btn-primary perm-create" style="background:#0b3b75;" data-bs-toggle="modal" data-bs-target="#addWoModal">
+          <i class="fa-solid fa-plus me-1"></i>Create Work Order
+        </button>
+      </div>
+
+      <div class="card-bss p-3">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>WO #</th>
+                <th>Unit</th>
+                <th>Type & Source</th>
+                <th>Priority</th>
+                <th>Problem Description</th>
+                <th>Mechanic</th>
+                <th>Downtime / Cost</th>
+                <th>Status</th>
+                <th>Workflow Actions</th>
+              </tr>
+            </thead>
+            <tbody id="woTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         MODULE 9: FAILURE ANALYSIS (FAR / PICA / RCA / 5-WHY / FISHBONE)
+    ===================================================================== -->
+    <section id="view-failure" class="module-view">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h4 class="fw-bold mb-0">Failure Analysis Report (FAR), RCA & PICA</h4>
+          <small class="text-muted">Structured 3-Why, 5-Why, 6M Fishbone Diagram, Corrective/Preventive Action tracking & Engineering Lessons Learned</small>
+        </div>
+        <button class="btn btn-sm btn-primary perm-create" style="background:#0b3b75;" data-bs-toggle="modal" data-bs-target="#addFarModal">
+          <i class="fa-solid fa-magnifying-glass-chart me-1"></i>Create Failure Analysis (FAR)
+        </button>
+      </div>
+
+      <div class="row g-3" id="farCardsContainer"></div>
+    </section>
+
+    <!-- ====================================================================
+         MODULE 10: SCHEDULE CALENDAR
+    ===================================================================== -->
+    <section id="view-schedule" class="module-view">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h4 class="fw-bold mb-0">Master Maintenance & Overhaul Schedule</h4>
+          <small class="text-muted">Integrated timeline for PPM, Oil Sampling, Calibration, Engine Overhaul, Transmission, Differential & Hydraulic rebuilds</small>
+        </div>
+      </div>
+      <div class="card-bss p-3">
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Target Date</th>
+                <th>Unit Code</th>
+                <th>Category</th>
+                <th>Component / Scope</th>
+                <th>Trigger HM</th>
+                <th>Assigned Team</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="masterScheduleBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         MODULE 11: INVENTORY & STOCK CARD
+    ===================================================================== -->
+    <section id="view-inventory" class="module-view">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h4 class="fw-bold mb-0">Plant Warehouse Inventory & Stock Card</h4>
+          <small class="text-muted">Min/Max replenishment alerts, Work Order parts issuance (auto-posts to Equipment Cost), and immutable Stock Card ledger</small>
+        </div>
+        <div class="d-flex gap-2">
+          <button class="btn btn-sm btn-success perm-create" data-bs-toggle="modal" data-bs-target="#stockTxModal"><i class="fa-solid fa-right-left me-1"></i>Issue / Receive Stock</button>
+        </div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-lg-8">
+          <div class="card-bss p-3 h-100">
+            <h6 class="fw-bold mb-3">Spare Parts & Lubricant Master Stock</h6>
+            <div class="table-responsive">
+              <table class="table table-sm table-hover align-middle">
+                <thead class="table-light">
+                  <tr><th>Part Number</th><th>Description</th><th>Category</th><th>Warehouse</th><th>Stock (Min/Max)</th><th>Unit Cost</th><th>Alert</th></tr>
+                </thead>
+                <tbody id="inventoryTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card-bss p-3 h-100">
+            <h6 class="fw-bold mb-3">Recent Stock Card Transactions</h6>
+            <div id="stockCardFeed" class="d-flex flex-column gap-2" style="max-height: 360px; overflow-y: auto;"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         MODULE 12: COST MODULE
+    ===================================================================== -->
+    <section id="view-cost" class="module-view">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h4 class="fw-bold mb-0">Equipment Maintenance Cost Ledger</h4>
+          <small class="text-muted">Parts, Labor, External Repair, Fuel, Oil, Tyre, GET & Undercarriage cost per unit and cost center</small>
+        </div>
+        <button class="btn btn-sm btn-primary perm-create" style="background:#0b3b75;" data-bs-toggle="modal" data-bs-target="#addCostModal">
+          <i class="fa-solid fa-plus me-1"></i>Log Direct Cost Entry
+        </button>
+      </div>
+
+      <div class="card-bss p-3">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover align-middle">
+            <thead class="table-light">
+              <tr><th>Date</th><th>Unit</th><th>Cost Center</th><th>Category</th><th>Description</th><th>Linked WO</th><th class="text-end">Amount (USD)</th></tr>
+            </thead>
+            <tbody id="costTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         MODULE 13: DOCUMENT MANAGEMENT
+    ===================================================================== -->
+    <section id="view-documents" class="module-view">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h4 class="fw-bold mb-0">Engineering Document Control & Version Repository</h4>
+          <small class="text-muted">OEM Shop Manuals, Hydraulic Schematics, Electrical Drawings, SOPs, and Revision History</small>
+        </div>
+        <button class="btn btn-sm btn-primary perm-create" style="background:#0b3b75;" onclick="uploadNewDocument()">
+          <i class="fa-solid fa-cloud-arrow-up me-1"></i>Upload Document / Revision
+        </button>
+      </div>
+
+      <div class="card-bss p-3">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead class="table-light">
+              <tr><th>Doc Number</th><th>Title</th><th>Type</th><th>Equipment Model</th><th>Revision</th><th>Format</th><th>Action</th></tr>
+            </thead>
+            <tbody id="documentsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         MODULE 14: REPORTS MODULE
+    ===================================================================== -->
+    <section id="view-reports" class="module-view">
+      <div class="mb-3">
+        <h4 class="fw-bold mb-0">Plant Engineering Reporting & Bulk Export Center</h4>
+        <small class="text-muted">Generate standardized Daily, Weekly, Monthly, and Yearly engineering compliance & cost packages</small>
+      </div>
+
+      <div class="row g-3" id="reportCardsGrid"></div>
+    </section>
+
+    <!-- ====================================================================
+         MODULE 15: AI PREDICTIVE MAINTENANCE, RUL & RISK ENGINE
+    ===================================================================== -->
+    <section id="view-ai-predictive" class="module-view">
+      <div class="mb-3">
+        <h4 class="fw-bold mb-0"><i class="fa-solid fa-brain text-primary me-2"></i>AI Predictive Maintenance & Remaining Useful Life (RUL)</h4>
+        <small class="text-muted">Multi-variate anomaly scoring fusing wear-metal trend slopes, VHMS alarm frequency, and operating duty severity</small>
+      </div>
+
+      <div class="card-bss p-3">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Unit Code</th>
+                <th>Model & HM</th>
+                <th>AI Risk Score</th>
+                <th>Priority Tier</th>
+                <th>Est. Remaining Useful Life (RUL)</th>
+                <th>Primary Risk Driver</th>
+                <th>AI Automatic Recommendation</th>
+              </tr>
+            </thead>
+            <tbody id="aiPredictiveTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         MODULE 16: USER PROFILE & AUDIT LOGS
+    ===================================================================== -->
+    <section id="view-profile" class="module-view">
+      <div class="row g-3">
+        <div class="col-lg-4">
+          <div class="card-bss p-4 text-center">
+            <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center mb-3" style="width:76px;height:76px;font-size:1.8rem;">
+              <i class="fa-solid fa-user-tie"></i>
+            </div>
+            <h5 class="fw-bold mb-1" id="profFullName">Ir. Hendra Wijaya</h5>
+            <p class="text-muted small mb-2" id="profPosition">Head of Plant Engineering</p>
+            <span class="badge bg-primary mb-3" id="profRoleBadge">Admin</span>
+            <div class="text-start small border-top pt-3">
+              <div class="mb-1"><strong>Employee ID:</strong> <span id="profEmpId">BSS-001</span></div>
+              <div class="mb-1"><strong>Department:</strong> <span id="profDept">Plant Engineering</span></div>
+              <div class="mb-1"><strong>Permissions:</strong> <span id="profPerms">Create, Edit, Delete, Approve, Export, Import</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-8">
+          <div class="card-bss p-3">
+            <h6 class="fw-bold mb-3">Security & System Audit Trail</h6>
+            <div class="table-responsive">
+              <table class="table table-sm table-striped">
+                <thead><tr><th>Timestamp</th><th>User</th><th>Action</th><th>Module</th><th>Record</th></tr></thead>
+                <tbody id="auditLogTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         MODULE 17: SYSTEM SETTINGS
+    ===================================================================== -->
+    <section id="view-settings" class="module-view">
+      <div class="card-bss p-4" style="max-width: 760px;">
+        <h5 class="fw-bold mb-3"><i class="fa-solid fa-sliders text-primary me-2"></i>Enterprise System Configuration</h5>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Company Name</label>
+            <input type="text" class="form-control" value="PT BSS Mining & Plant Engineering" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Backend REST API Endpoint</label>
+            <input type="text" id="settingApiUrl" class="form-control" value="http://localhost:5000/api" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">WhatsApp & Email Alert Gateway</label>
+            <select class="form-select">
+              <option selected>Enabled (Critical VHMS, Critical Oil, Overdue PPM)</option>
+              <option>Email Only</option>
+              <option>Disabled</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Interface Theme</label>
+            <button class="btn btn-outline-primary w-100" onclick="toggleTheme()">Switch Light / Dark Mode</button>
+          </div>
+          <div class="col-12 pt-2 border-top d-flex gap-2">
+            <button class="btn btn-primary btn-sm" onclick="backupDatabaseJson()"><i class="fa-solid fa-download me-1"></i>Backup System Snapshot (JSON)</button>
+            <button class="btn btn-outline-success btn-sm" onclick="Swal.fire('Configuration Saved','Enterprise settings and alert thresholds updated.','success')">Save Settings</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ========================================================================
+     MODALS FOR INTERACTIVE DATA ENTRY & QR LABELS
+========================================================================= -->
+
+<!-- Modal: Register New Unit -->
+<div class="modal fade" id="addUnitModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <form class="modal-content" onsubmit="handleCreateUnit(event)">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">Register New Heavy Equipment Unit</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body row g-3">
+        <div class="col-md-4"><label class="form-label small">Unit Code *</label><input name="unit_code" class="form-control" placeholder="EX-2005" required /></div>
+        <div class="col-md-4"><label class="form-label small">Category *</label>
+          <select name="equipment_category" class="form-select">
+            <option>Excavator</option><option>Dump Truck</option><option>Bulldozer</option><option>Motor Grader</option><option>Drill Rig</option>
+          </select>
+        </div>
+        <div class="col-md-4"><label class="form-label small">Model *</label><input name="model" class="form-control" placeholder="PC2000-8" required /></div>
+        <div class="col-md-4"><label class="form-label small">Manufacturer *</label><input name="manufacturer" class="form-control" value="Komatsu" required /></div>
+        <div class="col-md-4"><label class="form-label small">Serial Number *</label><input name="serial_number" class="form-control" placeholder="KMTPC2008912" required /></div>
+        <div class="col-md-4"><label class="form-label small">Engine Number *</label><input name="engine_number" class="form-control" placeholder="SAA12V140E-3" required /></div>
+        <div class="col-md-4"><label class="form-label small">Pit / Cluster</label>
+          <select name="pit_name" class="form-select"><option>Pit North</option><option>Pit South</option><option>Pit West</option></select>
+        </div>
+        <div class="col-md-4"><label class="form-label small">Cost Center *</label><input name="cost_center" class="form-control" value="CC-MIN-201" required /></div>
+        <div class="col-md-4"><label class="form-label small">Current HM *</label><input type="number" name="current_hm" class="form-control" value="1250" required /></div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary" style="background:#0b3b75;">Save Unit & Generate QR</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: QR Code & Asset Tag -->
+<div class="modal fade" id="qrModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content text-center p-4">
+      <h6 class="fw-bold mb-1" id="qrUnitTitle">UNIT QR TAG</h6>
+      <small class="text-muted mb-3 d-block" id="qrUnitSubtitle"></small>
+      <div id="qrcodeCanvas" class="d-flex justify-content-center my-2"></div>
+      <div class="small font-monospace mt-2" id="qrBarcodeText"></div>
+      <button class="btn btn-sm btn-primary mt-3" onclick="window.print()"><i class="fa-solid fa-print me-1"></i>Print QR Label</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Submit Oil Analysis -->
+<div class="modal fade" id="addOilModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <form class="modal-content" onsubmit="handleCreateOil(event)">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">Submit Oil Analysis Lab Sample (Auto-Diagnosis)</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body row g-2">
+        <div class="col-md-4"><label class="form-label small">Unit *</label><select name="unit_id" id="oilUnitSelect" class="form-select" required></select></div>
+        <div class="col-md-4"><label class="form-label small">Compartment *</label>
+          <select name="compartment" class="form-select"><option>Engine</option><option>Transmission</option><option>Hydraulic</option><option>Final Drive LH</option><option>Differential</option></select>
+        </div>
+        <div class="col-md-4"><label class="form-label small">Oil Brand & Grade</label><input name="oil_brand" class="form-control" value="Mobil Delvac 15W-40" /></div>
+        <div class="col-md-3"><label class="form-label small">Oil Hours</label><input type="number" name="oil_hours" class="form-control" value="250" /></div>
+        <div class="col-md-3"><label class="form-label small">Iron Fe (ppm)</label><input type="number" name="fe_iron" class="form-control" value="42" /></div>
+        <div class="col-md-3"><label class="form-label small">Copper Cu (ppm)</label><input type="number" name="cu_copper" class="form-control" value="14" /></div>
+        <div class="col-md-3"><label class="form-label small">Lead Pb (ppm)</label><input type="number" name="pb_lead" class="form-control" value="6" /></div>
+        <div class="col-md-3"><label class="form-label small">Silicon Si (ppm)</label><input type="number" name="si_silicon" class="form-control" value="11" /></div>
+        <div class="col-md-3"><label class="form-label small">Sodium Na (ppm)</label><input type="number" name="na_sodium" class="form-control" value="8" /></div>
+        <div class="col-md-3"><label class="form-label small">PQ Index</label><input type="number" name="pq_index" class="form-control" value="18" /></div>
+        <div class="col-md-3"><label class="form-label small">Visc @ 100°C</label><input type="number" step="0.1" name="viscosity_100c" class="form-control" value="14.2" /></div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary" style="background:#0b3b75;">Evaluate Sample & Trigger Workflow</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: VHMS Alarm -->
+<div class="modal fade" id="addVhmsModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form class="modal-content" onsubmit="handleCreateVhms(event)">
+      <div class="modal-header"><h5 class="modal-title fw-bold">Log VHMS Telemetry Fault</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body row g-2">
+        <div class="col-12"><label class="form-label small">Unit</label><select name="unit_id" id="vhmsUnitSelect" class="form-select"></select></div>
+        <div class="col-6"><label class="form-label small">Fault Code</label><input name="fault_code" class="form-control" value="E03-CA559" required /></div>
+        <div class="col-6"><label class="form-label small">Severity</label>
+          <select name="severity" class="form-select"><option value="CRITICAL">CRITICAL (Auto-Breakdown + WO)</option><option value="WARNING">WARNING</option></select>
+        </div>
+        <div class="col-12"><label class="form-label small">Component</label><input name="component" class="form-control" value="High Pressure Fuel Rail / Coolant" required /></div>
+        <div class="col-12"><label class="form-label small">Description</label><input name="description" class="form-control" value="Coolant Temp High 108°C / Derate Active" required /></div>
+      </div>
+      <div class="modal-footer"><button type="submit" class="btn btn-danger">Transmit Alarm</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: PAP Inspection -->
+<div class="modal fade" id="addPapModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form class="modal-content" onsubmit="handleCreatePap(event)">
+      <div class="modal-header"><h5 class="modal-title fw-bold">Record PAP Field Inspection</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body row g-2">
+        <div class="col-6"><label class="form-label small">Unit</label><select name="unit_id" id="papUnitSelect" class="form-select"></select></div>
+        <div class="col-6"><label class="form-label small">Inspection Type</label>
+          <select name="inspection_type" class="form-select"><option>Daily Walkaround</option><option>Magnetic Plug Check</option><option>Filter Cut Analysis</option><option>Undercarriage Audit</option></select>
+        </div>
+        <div class="col-6"><label class="form-label small">Result</label>
+          <select name="result_status" class="form-select"><option value="FINDING_MAJOR">FINDING_MAJOR (Spawns WO)</option><option value="FINDING_MINOR">FINDING_MINOR</option><option value="PASS">PASS</option></select>
+        </div>
+        <div class="col-6"><label class="form-label small">Due Date</label><input type="date" name="due_date" class="form-control" required /></div>
+        <div class="col-12"><label class="form-label small">Finding Description</label><textarea name="finding_description" class="form-control" rows="2" required></textarea></div>
+        <div class="col-12"><label class="form-label small">Corrective Action</label><input name="corrective_action" class="form-control" required /></div>
+      </div>
+      <div class="modal-footer"><button type="submit" class="btn btn-primary">Save PAP Inspection</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Create Work Order -->
+<div class="modal fade" id="addWoModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form class="modal-content" onsubmit="handleCreateWo(event)">
+      <div class="modal-header"><h5 class="modal-title fw-bold">Create Maintenance Work Order</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body row g-2">
+        <div class="col-6"><label class="form-label small">Unit</label><select name="unit_id" id="woUnitSelect" class="form-select"></select></div>
+        <div class="col-6"><label class="form-label small">WO Type</label>
+          <select name="wo_type" class="form-select"><option value="BREAKDOWN">BREAKDOWN</option><option value="CORRECTIVE">CORRECTIVE</option><option value="PREVENTIVE">PREVENTIVE</option></select>
+        </div>
+        <div class="col-6"><label class="form-label small">Priority</label>
+          <select name="priority" class="form-select"><option>EMERGENCY</option><option>HIGH</option><option>MEDIUM</option></select>
+        </div>
+        <div class="col-6"><label class="form-label small">Assigned Mechanic</label><input name="mechanic" class="form-control" value="Joko Susilo" /></div>
+        <div class="col-12"><label class="form-label small">Problem Description</label><textarea name="problem_description" class="form-control" rows="2" required></textarea></div>
+      </div>
+      <div class="modal-footer"><button type="submit" class="btn btn-primary">Issue Work Order</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Create Failure Analysis (FAR) -->
+<div class="modal fade" id="addFarModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <form class="modal-content" onsubmit="handleCreateFar(event)">
+      <div class="modal-header"><h5 class="modal-title fw-bold">Failure Analysis Report (FAR / 5-Why / Fishbone / PICA)</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body row g-2">
+        <div class="col-md-4"><label class="form-label small">Unit</label><select name="unit_id" id="farUnitSelect" class="form-select"></select></div>
+        <div class="col-md-4"><label class="form-label small">Failed Component</label><input name="failed_component" class="form-control" placeholder="Main Hydraulic Pump" required /></div>
+        <div class="col-md-4"><label class="form-label small">Failure Mode</label><input name="failure_mode" class="form-control" placeholder="Cavitation & Piston Seizure" required /></div>
+        <div class="col-md-6"><label class="form-label small">3-Why / 5-Why Chain</label><textarea name="five_why" class="form-control" rows="2" placeholder="Why 1: Pressure drop -> Why 2: Suction strainer clogged -> Why 3: Missed 500H hydraulic tank breather service"></textarea></div>
+        <div class="col-md-6"><label class="form-label small">Fishbone (6M: Man, Machine, Method, Material)</label><textarea name="fishbone" class="form-control" rows="2" placeholder="Method: Tank flush skipped | Material: Breather element saturated"></textarea></div>
+        <div class="col-md-6"><label class="form-label small">Corrective Action (Immediate)</label><input name="corrective_action" class="form-control" required /></div>
+        <div class="col-md-6"><label class="form-label small">Preventive Action (PICA)</label><input name="preventive_action" class="form-control" required /></div>
+        <div class="col-12"><label class="form-label small">Engineering Lessons Learned</label><input name="lessons_learned" class="form-control" required /></div>
+      </div>
+      <div class="modal-footer"><button type="submit" class="btn btn-primary">Publish FAR & PICA</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Stock Transaction -->
+<div class="modal fade" id="stockTxModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form class="modal-content" onsubmit="handleStockTx(event)">
+      <div class="modal-header"><h5 class="modal-title fw-bold">Inventory Stock Issue / Receive</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body row g-2">
+        <div class="col-12"><label class="form-label small">Part Item</label><select name="item_id" id="txItemSelect" class="form-select"></select></div>
+        <div class="col-6"><label class="form-label small">Transaction Type</label>
+          <select name="tx_type" class="form-select"><option value="ISSUE">ISSUE (Deduct & Charge Unit)</option><option value="RECEIVE">RECEIVE (Warehouse Restock)</option></select>
+        </div>
+        <div class="col-6"><label class="form-label small">Quantity</label><input type="number" name="quantity" class="form-control" value="2" min="1" required /></div>
+        <div class="col-6"><label class="form-label small">Charge to Unit (for Issue)</label><select name="unit_code" id="txUnitSelect" class="form-select"></select></div>
+        <div class="col-6"><label class="form-label small">Reference WO #</label><input name="wo_number" class="form-control" placeholder="WO-2026-001" /></div>
+      </div>
+      <div class="modal-footer"><button type="submit" class="btn btn-success">Post Stock Card Entry</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Direct Cost Entry -->
+<div class="modal fade" id="addCostModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form class="modal-content" onsubmit="handleAddCost(event)">
+      <div class="modal-header"><h5 class="modal-title fw-bold">Record Equipment Cost</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body row g-2">
+        <div class="col-6"><label class="form-label small">Unit</label><select name="unit_code" id="costUnitSelect" class="form-select"></select></div>
+        <div class="col-6"><label class="form-label small">Category</label>
+          <select name="cost_category" class="form-select"><option>PARTS</option><option>LABOR</option><option>EXTERNAL_REPAIR</option><option>FUEL</option><option>OIL</option><option>TYRE</option><option>GET</option><option>UNDERCARRIAGE</option></select>
+        </div>
+        <div class="col-6"><label class="form-label small">Amount (USD)</label><input type="number" name="amount" class="form-control" value="1450" required /></div>
+        <div class="col-6"><label class="form-label small">Date</label><input type="date" name="cost_date" class="form-control" required /></div>
+        <div class="col-12"><label class="form-label small">Description</label><input name="description" class="form-control" required /></div>
+      </div>
+      <div class="modal-footer"><button type="submit" class="btn btn-primary">Post to Cost Ledger</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- ========================================================================
+     4. APPLICATION JAVASCRIPT ENGINE (FULL INTER-MODULE STATE & CHARTS)
+========================================================================= -->
+<script>
+window.BSS_CONFIG = {
+  API_URL: 'http://localhost:5000/api',
+  JWT_TOKEN: null,
+  IS_LIVE_BACKEND: false
+};
+
+// Unified REST API Client with Graceful Hybrid Fallback
+async function apiRequest(endpoint, method = 'GET', body = null) {
+  const baseUrl = document.getElementById('settingApiUrl')?.value || window.BSS_CONFIG.API_URL;
+  const headers = { 'Content-Type': 'application/json' };
+  if (window.BSS_CONFIG.JWT_TOKEN) {
+    headers['Authorization'] = `Bearer ${window.BSS_CONFIG.JWT_TOKEN}`;
+  }
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3500);
+    const res = await fetch(`${baseUrl}${endpoint}`, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : null,
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    const data = await res.json();
+    if (res.ok && data.success !== false) {
+      window.BSS_CONFIG.IS_LIVE_BACKEND = true;
+      updateConnectionBadge(true);
+      return { ok: true, data };
+    }
+    return { ok: false, error: data.message || 'API Error' };
+  } catch (err) {
+    window.BSS_CONFIG.IS_LIVE_BACKEND = false;
+    updateConnectionBadge(false);
+    return { ok: false, offline: true };
+  }
+}
+
+function updateConnectionBadge(isLive) {
+  const badge = document.getElementById('livePipelineBadge');
+  if (!badge) return;
+  if (isLive) {
+    badge.className = 'badge bg-success-subtle text-success border border-success-subtle d-none d-md-inline-block';
+    badge.innerHTML = '<i class="fa-solid fa-server me-1"></i>PostgreSQL Live API';
+  } else {
+    badge.className = 'badge bg-primary-subtle text-primary border border-primary-subtle d-none d-md-inline-block';
+    badge.innerHTML = '<i class="fa-solid fa-microchip me-1"></i>Embedded EAM Engine';
+  }
+}
+
+// Role Permissions Matrix
+const ROLE_PERMISSIONS = {
+  'Admin': { name: 'Ir. Hendra Wijaya', empId: 'BSS-001', dept: 'Plant Engineering', position: 'Head of Plant Engineering', create: true, edit: true, delete: true, approve: true, export: true, import: true },
+  'Plant Engineer': { name: 'Rizky Pratama, S.T.', empId: 'BSS-002', dept: 'Reliability Engineering', position: 'Senior Plant Engineer', create: true, edit: true, delete: false, approve: true, export: true, import: true },
+  'Maintenance Planner': { name: 'Dian Kusuma', empId: 'BSS-003', dept: 'Maintenance Planning', position: 'Lead Maintenance Planner', create: true, edit: true, delete: false, approve: true, export: true, import: true },
+  'Supervisor': { name: 'Bambang Sutrisno', empId: 'BSS-004', dept: 'Field Maintenance', position: 'Plant Supervisor', create: true, edit: true, delete: false, approve: true, export: true, import: false },
+  'Foreman': { name: 'Agus Setiawan', empId: 'BSS-005', dept: 'Field Maintenance', position: 'Workshop Foreman', create: true, edit: true, delete: false, approve: false, export: true, import: false },
+  'Mechanic': { name: 'Joko Susilo', empId: 'BSS-006', dept: 'Heavy Equipment Repair', position: 'Senior Heavy Mechanic', create: true, edit: true, delete: false, approve: false, export: false, import: false },
+  'Guest': { name: 'Management Viewer', empId: 'BSS-007', dept: 'Executive', position: 'Operations Observer', create: false, edit: false, delete: false, approve: false, export: false, import: false }
+};
+
+// Centralized Embedded EAM Database State
+const DB = {
+  currentUser: { role: 'Admin', ...ROLE_PERMISSIONS['Admin'] },
+  units: [
+    { unit_id: 'u1', unit_code: 'EX-2001', equipment_category: 'Excavator', model: 'PC2000-8', manufacturer: 'Komatsu', serial_number: 'KMTPC2008101', engine_number: 'SAA12V140E-3', commission_date: '2022-03-15', pit_name: 'Pit North', cluster_name: 'Cluster Alpha', cost_center: 'CC-OB-101', current_hm: 14250, current_km: 0, current_fuel_pct: 84, status: 'RUNNING', ai_risk_score: 22, ai_rul_hours: 3750 },
+    { unit_id: 'u2', unit_code: 'EX-2002', equipment_category: 'Excavator', model: 'EX2600-7', manufacturer: 'Hitachi', serial_number: 'HITEX2607442', engine_number: 'QSK50-C1500', commission_date: '2021-11-02', pit_name: 'Pit North', cluster_name: 'Cluster Alpha', cost_center: 'CC-OB-101', current_hm: 16890, current_km: 0, current_fuel_pct: 45, status: 'BREAKDOWN', ai_risk_score: 86, ai_rul_hours: 320 },
+    { unit_id: 'u3', unit_code: 'DT-7851', equipment_category: 'Dump Truck', model: 'HD785-7', manufacturer: 'Komatsu', serial_number: 'KMTHD7859012', engine_number: 'SAA12V140E-3', commission_date: '2023-01-20', pit_name: 'Pit South', cluster_name: 'Cluster Bravo', cost_center: 'CC-HL-202', current_hm: 9420, current_km: 148500, current_fuel_pct: 91, status: 'RUNNING', ai_risk_score: 14, ai_rul_hours: 8580 },
+    { unit_id: 'u4', unit_code: 'DT-7852', equipment_category: 'Dump Truck', model: 'HD785-7', manufacturer: 'Komatsu', serial_number: 'KMTHD7859019', engine_number: 'SAA12V140E-3', commission_date: '2023-02-11', pit_name: 'Pit South', cluster_name: 'Cluster Bravo', cost_center: 'CC-HL-202', current_hm: 9110, current_km: 142100, current_fuel_pct: 78, status: 'RUNNING', ai_risk_score: 48, ai_rul_hours: 5400 },
+    { unit_id: 'u5', unit_code: 'DZ-3751', equipment_category: 'Bulldozer', model: 'D375A-6', manufacturer: 'Komatsu', serial_number: 'KMTD3756610', engine_number: 'SAA6D170E-5', commission_date: '2022-07-18', pit_name: 'Pit West', cluster_name: 'Cluster Charlie', cost_center: 'CC-DZ-301', current_hm: 11500, current_km: 0, current_fuel_pct: 66, status: 'STANDBY', ai_risk_score: 19, ai_rul_hours: 6500 },
+    { unit_id: 'u6', unit_code: 'MG-8251', equipment_category: 'Motor Grader', model: 'GD825A-2', manufacturer: 'Komatsu', serial_number: 'KMTGD8252211', engine_number: 'S6D140E-3', commission_date: '2023-06-05', pit_name: 'Pit West', cluster_name: 'Cluster Charlie', cost_center: 'CC-RD-401', current_hm: 6480, current_km: 52400, current_fuel_pct: 88, status: 'RUNNING', ai_risk_score: 11, ai_rul_hours: 11520 }
+  ],
+  oilSamples: [
+    { lab_sample_no: 'LAB-2026-881', unit_id: 'u2', unit_code: 'EX-2002', compartment: 'Hydraulic', oil_brand: 'Mobil DTE 10 Excel', oil_grade: 'ISO VG 46', oil_hours: 490, fe_iron: 148, cu_copper: 54, pb_lead: 19, si_silicon: 26, na_sodium: 9, k_potassium: 4, pq_index: 52, viscosity_100c: 7.8, diagnosis_status: 'CRITICAL', auto_conclusion: 'Elevated Iron (148 ppm), Copper (54 ppm) & PQ Index (52) indicating main pump piston/shoe fatigue.', linked_wo: 'WO-OIL-44102' },
+    { lab_sample_no: 'LAB-2026-882', unit_id: 'u4', unit_code: 'DT-7852', compartment: 'Engine', oil_brand: 'Mobil Delvac MX', oil_grade: '15W-40', oil_hours: 245, fe_iron: 84, cu_copper: 28, pb_lead: 8, si_silicon: 24, na_sodium: 11, k_potassium: 6, pq_index: 21, viscosity_100c: 13.9, diagnosis_status: 'CAUTION', auto_conclusion: 'Elevated Silicon (24 ppm) & Iron (84 ppm) indicating air intake dust ingress.', linked_wo: 'WO-OIL-44109' },
+    { lab_sample_no: 'LAB-2026-883', unit_id: 'u1', unit_code: 'EX-2001', compartment: 'Engine', oil_brand: 'Mobil Delvac MX', oil_grade: '15W-40', oil_hours: 250, fe_iron: 32, cu_copper: 9, pb_lead: 3, si_silicon: 8, na_sodium: 5, k_potassium: 2, pq_index: 12, viscosity_100c: 14.4, diagnosis_status: 'NORMAL', auto_conclusion: 'All wear metals and viscosity parameters within OEM limits.', linked_wo: '-' }
+  ],
+  vhmsAlarms: [
+    { alarm_id: 'al1', occurred_at: '2026-11-23 06:42', unit_id: 'u2', unit_code: 'EX-2002', fault_code: 'E03-CA2271', component: 'Main Hydraulic Pump #1', description: 'Pump Case Drain Temperature High & Pressure Drop', telemetry_value: '112°C / 145 bar', threshold_value: '95°C / 310 bar', severity: 'CRITICAL', status: 'ACTIVE', linked_wo: 'WO-VHMS-9921' },
+    { alarm_id: 'al2', occurred_at: '2026-11-23 07:15', unit_id: 'u4', unit_code: 'DT-7852', fault_code: 'W01-CA441', component: 'Air Cleaner Restriction', description: 'Bank 1 Air Intake Differential Pressure Elevated', telemetry_value: '6.8 kPa', threshold_value: '6.2 kPa', severity: 'WARNING', status: 'ACTIVE', linked_wo: 'WO-OIL-44109' }
+  ],
+  papInspections: [
+    { pap_id: 'pap1', pap_number: 'PAP-2026-104', inspection_date: '2026-11-22', unit_id: 'u4', unit_code: 'DT-7852', inspection_type: 'Daily Walkaround', result_status: 'FINDING_MAJOR', finding_description: 'Cracked turbocharger intake hose clamp on RH bank', corrective_action: 'Replace heavy-duty T-bolt clamp & pressure test intake', pic_name: 'Agus Setiawan', due_date: '2026-11-24', verification_status: 'OPEN' },
+    { pap_id: 'pap2', pap_number: 'PAP-2026-103', inspection_date: '2026-11-21', unit_id: 'u1', unit_code: 'EX-2001', inspection_type: 'Undercarriage Audit', result_status: 'PASS', finding_description: 'Track link pitch & roller wear at 42% remaining life', corrective_action: 'No immediate action required', pic_name: 'Bambang Sutrisno', due_date: '2026-12-21', verification_status: 'CLOSED' }
+  ],
+  ppmSchedules: [
+    { ppm_id: 'ppm1', ppm_code: 'PPM-2026-501', unit_id: 'u1', unit_code: 'EX-2001', service_interval: 'PS2 (500H)', planned_hm: 14500, scheduled_date: '2026-11-26', completion_pct: 0, technician_name: 'Joko Susilo', status: 'SCHEDULED' },
+    { ppm_id: 'ppm2', ppm_code: 'PPM-2026-498', unit_id: 'u3', unit_code: 'DT-7851', service_interval: 'PS1 (250H)', planned_hm: 9500, scheduled_date: '2026-11-24', completion_pct: 65, technician_name: 'Joko Susilo', status: 'IN_PROGRESS' },
+    { ppm_id: 'ppm3', ppm_code: 'PPM-2026-490', unit_id: 'u6', unit_code: 'MG-8251', service_interval: 'PS3 (1000H)', planned_hm: 6250, scheduled_date: '2026-11-18', completion_pct: 100, technician_name: 'Agus Setiawan', status: 'COMPLETED' }
+  ],
+  workOrders: [
+    { wo_id: 'wo1', wo_number: 'WO-VHMS-9921', unit_id: 'u2', unit_code: 'EX-2002', wo_type: 'BREAKDOWN', source: 'VHMS', priority: 'EMERGENCY', description: 'Main Hydraulic Pump #1 overheating & pressure loss — replace pump group & flush circuit', mechanic: 'Joko Susilo', downtime: 6.5, cost: 18450, status: 'IN_PROGRESS' },
+    { wo_id: 'wo2', wo_number: 'WO-OIL-44109', unit_id: 'u4', unit_code: 'DT-7852', wo_type: 'PREDICTIVE', source: 'OIL_ANALYSIS', priority: 'HIGH', description: 'High Silicon (24 ppm) — inspect air intake ducting, replace primary/secondary elements', mechanic: 'Agus Setiawan', downtime: 1.5, cost: 680, status: 'OPEN' },
+    { wo_id: 'wo3', wo_number: 'WO-2026-089', unit_id: 'u3', unit_code: 'DT-7851', wo_type: 'PREVENTIVE', source: 'PPM', priority: 'MEDIUM', description: 'PS1 250H Preventive Maintenance & Engine Oil/Filter Change', mechanic: 'Joko Susilo', downtime: 3.0, cost: 1420, status: 'COMPLETED' }
+  ],
+  farReports: [
+    { far_number: 'FAR-2026-019', unit_code: 'EX-2002', failure_date: '2026-11-23', failed_component: 'Main Hydraulic Piston Pump #1', failure_mode: 'Slipper Pad Wear & Case Overheating', five_why: 'Why 1: Case drain temp >110°C -> Why 2: Internal volumetric leakage -> Why 3: Silicate abrasive wear from breather ingress', fishbone: 'Material: Breather desiccant saturated | Method: Breather interval extended during wet season', corrective_action: 'Install remanufactured main pump & kidney-loop filter hydraulic tank to ISO 16/14/11', preventive_action: 'Mandate desiccant breather replacement every 250H during rainy season across all PC2000/EX2600 excavators', lessons_learned: 'High rainfall humidity accelerates breather saturation; enforce 250H check in PPM.' }
+  ],
+  inventory: [
+    { item_id: 'inv1', part_number: '708-2L-00450', part_name: 'Main Hydraulic Pump Assembly', category: 'Hydraulic', warehouse: 'WH-MAIN-A1', current_stock: 1, min_stock: 2, max_stock: 4, unit_cost: 16500 },
+    { item_id: 'inv2', part_number: '600-211-1340', part_name: 'Engine Oil Filter Cartridge', category: 'Filter', warehouse: 'WH-MAIN-B4', current_stock: 48, min_stock: 20, max_stock: 100, unit_cost: 42 },
+    { item_id: 'inv3', part_number: '600-185-6100', part_name: 'Heavy Duty Air Cleaner Kit', category: 'Filter', warehouse: 'WH-MAIN-B2', current_stock: 9, min_stock: 12, max_stock: 40, unit_cost: 185 },
+    { item_id: 'inv4', part_number: 'MOB-15W40-208', part_name: 'Mobil Delvac MX 15W-40 (Drum 208L)', category: 'Lubricant', warehouse: 'WH-LUBE-01', current_stock: 18, min_stock: 10, max_stock: 35, unit_cost: 890 }
+  ],
+  stockTransactions: [
+    { timestamp: '2026-11-23 07:30', part_number: '708-2L-00450', tx_type: 'ISSUE', quantity: 1, unit_code: 'EX-2002', wo_number: 'WO-VHMS-9921' },
+    { timestamp: '2026-11-22 14:15', part_number: '600-211-1340', tx_type: 'RECEIVE', quantity: 30, unit_code: '-', wo_number: 'PO-8821' }
+  ],
+  costs: [
+    { cost_date: '2026-11-23', unit_code: 'EX-2002', cost_center: 'CC-OB-101', category: 'PARTS', description: 'Main Hydraulic Pump Assembly (WO-VHMS-9921)', wo_number: 'WO-VHMS-9921', amount: 16500 },
+    { cost_date: '2026-11-23', unit_code: 'EX-2002', cost_center: 'CC-OB-101', category: 'LABOR', description: 'Field Hydraulic Rebuild Crew (18 Man-Hrs)', wo_number: 'WO-VHMS-9921', amount: 1950 },
+    { cost_date: '2026-11-21', unit_code: 'DT-7851', cost_center: 'CC-HL-202', category: 'OIL', description: 'PS1 Engine & Transmission Lubricant Fill', wo_number: 'WO-2026-089', amount: 1420 },
+    { cost_date: '2026-11-19', unit_code: 'DT-7852', cost_center: 'CC-HL-202', category: 'TYRE', description: '27.00R49 Bridgestone VRLS Pos #4 Replacement', wo_number: '-', amount: 11200 },
+    { cost_date: '2026-11-17', unit_code: 'DZ-3751', cost_center: 'CC-DZ-301', category: 'GET', description: 'Ripper Shank Tip & Cutting Edge Set', wo_number: '-', amount: 3450 }
+  ],
+  documents: [
+    { doc_number: 'DOC-KOM-PC2000', title: 'Komatsu PC2000-8 Shop Manual & Hydraulic Circuit', doc_type: 'MANUAL', equipment_model: 'PC2000-8', revision: 'Rev 4.2', file_format: 'PDF' },
+    { doc_number: 'DOC-HIT-EX2600', title: 'Hitachi EX2600-7 Pump Control & VHMS Fault Code Guide', doc_type: 'DRAWING', equipment_model: 'EX2600-7', revision: 'Rev 2.1', file_format: 'PDF' },
+    { doc_number: 'SOP-BSS-014', title: 'Standard Operating Procedure: Clean Oil Sampling & Filter Cut', doc_type: 'SOP', equipment_model: 'ALL FLEET', revision: 'Rev 3.0', file_format: 'PDF' }
+  ],
+  notifications: [
+    { severity: 'danger', title: 'CRITICAL VHMS: EX-2002', message: 'Main Hydraulic Pump #1 Temp 112°C -> Auto-created WO-VHMS-9921' },
+    { severity: 'warning', title: 'OIL CAUTION: DT-7852', message: 'Silicon 24 ppm -> Auto-created Predictive WO-OIL-44109' },
+    { severity: 'info', title: 'LOW STOCK ALERT', message: 'Part 708-2L-00450 below minimum stock (1 / 2 PCS)' }
+  ],
+  auditLogs: [
+    { timestamp: '2026-11-23 07:30:12', user: 'Joko Susilo', action: 'ISSUE_PART', module: 'INVENTORY', record: '708-2L-00450 -> EX-2002' },
+    { timestamp: '2026-11-23 06:42:05', user: 'VHMS_GATEWAY', action: 'AUTO_WO_TRIGGER', module: 'VHMS', record: 'EX-2002 -> WO-VHMS-9921' },
+    { timestamp: '2026-11-22 16:10:44', user: 'Rizky Pratama, S.T.', action: 'PUBLISH_FAR', module: 'FAILURE_ANALYSIS', record: 'FAR-2026-019' }
+  ]
+};
+
+const CHARTS = {};
+
+// ============================================================================
+// LOGIN, RBAC & NAVIGATION HANDLERS
+// ============================================================================
+function applyRolePreset() {
+  document.getElementById('loginEmail').value = document.getElementById('loginRolePreset').value;
+}
+
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const sel = document.getElementById('loginRolePreset');
+  const roleName = sel.options[sel.selectedIndex].text.split(' — ')[0];
+  const email = document.getElementById('loginEmail').value;
+  const password = document.getElementById('loginPassword').value;
+  const profile = ROLE_PERMISSIONS[roleName] || ROLE_PERMISSIONS['Admin'];
+
+  // Attempt Live Backend JWT Authentication first
+  const authRes = await apiRequest('/auth/login', 'POST', { email, password });
+  if (authRes.ok && authRes.data.token) {
+    window.BSS_CONFIG.JWT_TOKEN = authRes.data.token;
+    await syncFromLiveBackend();
+  }
+
+  DB.currentUser = { role: roleName, ...profile };
+  document.getElementById('loginScreen').style.display = 'none';
+  applyRBACToUI();
+  addAudit(DB.currentUser.name, 'LOGIN', 'AUTH', `${roleName} Session Started`);
+  refreshAllModules();
+});
+
+function logoutSystem() {
+  window.BSS_CONFIG.JWT_TOKEN = null;
+  document.getElementById('loginScreen').style.display = 'flex';
+}
+
+async function syncFromLiveBackend() {
+  const dash = await apiRequest('/dashboard/summary');
+  if (!dash.ok) return;
+  if (dash.data.units?.length) {
+    DB.units = dash.data.units.map(u => ({
+      ...u,
+      pit_name: u.pit_name || 'Pit North',
+      cluster_name: u.cluster_name || 'Cluster Alpha'
+    }));
+  }
+  if (dash.data.oilSamples?.length) {
+    DB.oilSamples = dash.data.oilSamples.map(o => ({
+      ...o,
+      unit_code: DB.units.find(u => u.unit_id === o.unit_id)?.unit_code || 'UNIT',
+      linked_wo: o.linked_wo_id ? 'AUTO-WO' : '-'
+    }));
+  }
+  if (dash.data.recentWorkOrders?.length) {
+    DB.workOrders = dash.data.recentWorkOrders.map(w => ({
+      ...w,
+      unit_code: DB.units.find(u => u.unit_id === w.unit_id)?.unit_code || 'UNIT',
+      source: w.source_module,
+      description: w.problem_description,
+      mechanic: 'Assigned Tech',
+      downtime: Number(w.downtime_hours || 0),
+      cost: Number(w.total_parts_cost || 0) + Number(w.total_labor_cost || 0)
+    }));
+  }
+}
+
+function applyRBACToUI() {
+  const u = DB.currentUser;
+  document.getElementById('navUserName').textContent = u.name;
+  document.getElementById('navUserRole').textContent = u.role;
+  document.getElementById('profFullName').textContent = u.name;
+  document.getElementById('profPosition').textContent = u.position;
+  document.getElementById('profRoleBadge').textContent = u.role;
+  document.getElementById('profEmpId').textContent = u.empId;
+  document.getElementById('profDept').textContent = u.dept;
+
+  const perms = [];
+  if (u.create) perms.push('Create');
+  if (u.edit) perms.push('Edit');
+  if (u.delete) perms.push('Delete');
+  if (u.approve) perms.push('Approve');
+  if (u.export) perms.push('Export');
+  if (u.import) perms.push('Import');
+  document.getElementById('profPerms').textContent = perms.length ? perms.join(', ') : 'View Only (Read-Only Guest)';
+
+  document.querySelectorAll('.perm-create').forEach(el => {
+    el.style.display = u.create ? '' : 'none';
+  });
+}
+
+document.querySelectorAll('.nav-link-bss').forEach(link => {
+  link.addEventListener('click', () => {
+    document.querySelectorAll('.nav-link-bss').forEach(l => l.classList.remove('active'));
+    link.classList.add('active');
+    const target = link.getAttribute('data-target');
+    document.querySelectorAll('.module-view').forEach(v => v.classList.remove('active'));
+    document.getElementById(`view-${target}`).classList.add('active');
+    if (window.innerWidth < 992) document.getElementById('sidebar').classList.remove('open');
+    refreshAllModules();
+  });
+});
+
+function toggleTheme() {
+  const html = document.documentElement;
+  html.setAttribute('data-theme', html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+
+function addAudit(user, action, moduleName, record) {
+  const now = new Date().toISOString().replace('T', ' ').slice(0, 19);
+  DB.auditLogs.unshift({ timestamp: now, user, action, module: moduleName, record });
+}
+
+// ============================================================================
+// MASTER REFRESH & INTER-MODULE SYNCHRONIZATION
+// ============================================================================
+function refreshAllModules() {
+  populateUnitDropdowns();
+  renderDashboardKPIs();
+  renderDashboardCharts();
+  renderUnitsTable();
+  renderConditionInova();
+  renderOilTable();
+  renderVhmsTable();
+  renderPapTable();
+  renderPpmTable();
+  renderWorkOrdersTable();
+  renderFarCards();
+  renderMasterSchedule();
+  renderInventory();
+  renderCostLedger();
+  renderDocuments();
+  renderReportsGrid();
+  renderAiPredictive();
+  renderNotificationsAndAudits();
+}
+
+function populateUnitDropdowns() {
+  const selects = ['oilUnitSelect', 'vhmsUnitSelect', 'papUnitSelect', 'woUnitSelect', 'farUnitSelect'];
+  selects.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = DB.units.map(u => `<option value="${u.unit_id}">${u.unit_code} — ${u.model} (${u.current_hm} HM)</option>`).join('');
+  });
+  ['txUnitSelect', 'costUnitSelect'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = DB.units.map(u => `<option value="${u.unit_code}">${u.unit_code} — ${u.model}</option>`).join('');
+  });
+  const itemSel = document.getElementById('txItemSelect');
+  if (itemSel) {
+    itemSel.innerHTML = DB.inventory.map(i => `<option value="${i.item_id}">${i.part_number} — ${i.part_name} (Stock: ${i.current_stock})</option>`).join('');
+  }
+}
+
+// ============================================================================
+// DASHBOARD KPIs & CHARTS
+// ============================================================================
+function renderDashboardKPIs() {
+  const total = DB.units.length;
+  const running = DB.units.filter(u => u.status === 'RUNNING').length;
+  const standby = DB.units.filter(u => u.status === 'STANDBY').length;
+  const breakdown = DB.units.filter(u => u.status === 'BREAKDOWN').length;
+
+  const totalDowntime = DB.workOrders.reduce((s, w) => s + Number(w.downtime || 0), 0);
+  const schedHrs = Math.max(1, total * 720);
+  const pa = (((schedHrs - totalDowntime) / schedHrs) * 100).toFixed(1);
+  const bdCount = Math.max(1, DB.workOrders.filter(w => w.wo_type === 'BREAKDOWN').length);
+  const mtbf = ((schedHrs - totalDowntime) / bdCount).toFixed(0);
+  const mttr = (totalDowntime / bdCount).toFixed(1);
+  const reliability = (Math.exp(-24 / Math.max(1, Number(mtbf))) * 100).toFixed(1);
+
+  const ppmDone = DB.ppmSchedules.filter(p => p.status === 'COMPLETED').length;
+  const ppmAchv = DB.ppmSchedules.length ? ((ppmDone / DB.ppmSchedules.length) * 100).toFixed(0) : 100;
+
+  const papDone = DB.papInspections.filter(p => p.verification_status === 'CLOSED' || p.result_status === 'PASS').length;
+  const papAchv = DB.papInspections.length ? ((papDone / DB.papInspections.length) * 100).toFixed(0) : 100;
+
+  const normalOils = DB.oilSamples.filter(o => o.diagnosis_status === 'NORMAL').length;
+  const oilHealth = DB.oilSamples.length ? ((normalOils / DB.oilSamples.length) * 100).toFixed(0) : 100;
+
+  const totalCost = DB.costs.reduce((s, c) => s + Number(c.amount || 0), 0);
+  const costByUnit = {};
+  DB.costs.forEach(c => { costByUnit[c.unit_code] = (costByUnit[c.unit_code] || 0) + Number(c.amount); });
+  const topCostUnit = Object.entries(costByUnit).sort((a, b) => b[1] - a[1])[0]?.[0] || '-';
+
+  document.getElementById('kpiTotalUnits').textContent = total;
+  document.getElementById('kpiRunning').textContent = running;
+  document.getElementById('kpiStandby').textContent = standby;
+  document.getElementById('kpiBreakdown').textContent = breakdown;
+  document.getElementById('kpiAlarms').textContent = DB.vhmsAlarms.filter(a => a.status === 'ACTIVE').length;
+  document.getElementById('kpiPA').textContent = `${pa}%`;
+  document.getElementById('kpiReliability').textContent = `${reliability}%`;
+  document.getElementById('kpiMTBF').textContent = mtbf;
+  document.getElementById('kpiMTTR').textContent = mttr;
+  document.getElementById('kpiPPM').textContent = `${ppmAchv}%`;
+  document.getElementById('kpiPAP').textContent = `${papAchv}%`;
+  document.getElementById('kpiOilHealth').textContent = `${oilHealth}%`;
+  document.getElementById('kpiTotalCost').textContent = `$${totalCost.toLocaleString()}`;
+  document.getElementById('kpiTopCostUnit').textContent = topCostUnit;
+
+  // Upcoming Schedule Mini-Table
+  const schedBody = document.querySelector('#dashScheduleTable tbody');
+  schedBody.innerHTML = DB.ppmSchedules.map(p => `
+    <tr>
+      <td class="fw-bold">${p.unit_code}</td>
+      <td>${p.service_interval}</td>
+      <td>${p.planned_hm} HM (${p.scheduled_date})</td>
+      <td><span class="badge ${p.status === 'COMPLETED' ? 'bg-success' : 'bg-warning text-dark'}">${p.status}</span></td>
+    </tr>
+  `).join('');
+
+  // Live Activity Feed
+  document.getElementById('dashActivityFeed').innerHTML = DB.auditLogs.slice(0, 7).map(a => `
+    <div class="p-2 rounded border d-flex justify-content-between align-items-center small">
+      <div><span class="badge bg-primary me-1">${a.module}</span> <strong>${a.user}</strong>: ${a.record}</div>
+      <span class="text-muted" style="font-size:0.72rem;">${a.timestamp.slice(11)}</span>
+    </div>
+  `).join('');
+}
+
+function renderDashboardCharts() {
+  const destroyIf = (key) => { if (CHARTS[key]) CHARTS[key].destroy(); };
+
+  destroyIf('avail');
+  CHARTS.avail = new Chart(document.getElementById('chartAvailability'), {
+    type: 'line',
+    data: {
+      labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov (Live)'],
+      datasets: [
+        { label: 'Physical Availability (%)', data: [91.2, 92.5, 90.8, 93.4, 94.1, 93.8], borderColor: '#0b3b75', backgroundColor: 'rgba(11,59,117,0.12)', fill: true, tension: 0.35 },
+        { label: 'Fleet Reliability R(24h) (%)', data: [94.0, 94.8, 93.5, 95.2, 96.0, 95.6], borderColor: '#0099ff', tension: 0.35 }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 80, max: 100 } } }
+  });
+
+  const catTotals = {};
+  DB.costs.forEach(c => { catTotals[c.category] = (catTotals[c.category] || 0) + Number(c.amount); });
+  destroyIf('cost');
+  CHARTS.cost = new Chart(document.getElementById('chartCostTrend'), {
+    type: 'bar',
+    data: {
+      labels: Object.keys(catTotals),
+      datasets: [{ label: 'Cost (USD)', data: Object.values(catTotals), backgroundColor: ['#0b3b75', '#0099ff', '#10b981', '#f59e0b', '#ef4444', '#6366f1'] }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+
+  destroyIf('oil');
+  CHARTS.oil = new Chart(document.getElementById('chartOilTrend'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Normal', 'Caution', 'Critical'],
+      datasets: [{
+        data: [
+          DB.oilSamples.filter(o => o.diagnosis_status === 'NORMAL').length,
+          DB.oilSamples.filter(o => o.diagnosis_status === 'CAUTION').length,
+          DB.oilSamples.filter(o => o.diagnosis_status === 'CRITICAL').length
+        ],
+        backgroundColor: ['#16a34a', '#f59e0b', '#dc2626']
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+
+  destroyIf('fail');
+  CHARTS.fail = new Chart(document.getElementById('chartFailureTrend'), {
+    type: 'bar',
+    data: {
+      labels: ['Hydraulic Pump', 'Air Intake/Turbo', 'Undercarriage', 'Electrical ECM'],
+      datasets: [{ label: 'Downtime (Hrs)', data: [14.5, 6.2, 4.8, 3.1], backgroundColor: '#ef4444' }]
+    },
+    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false }
+  });
+
+  destroyIf('ppmpap');
+  CHARTS.ppmpap = new Chart(document.getElementById('chartPpmPap'), {
+    type: 'bar',
+    data: {
+      labels: ['PPM Compliance', 'PAP Closure', 'Oil Sampling On-Time'],
+      datasets: [
+        { label: 'Actual (%)', data: [92, 88, 96], backgroundColor: '#0b3b75' },
+        { label: 'KPI Target (%)', data: [95, 90, 95], backgroundColor: '#94a3b8' }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100 } } }
+  });
+}
+
+// ============================================================================
+// UNIT POPULATION & QR GENERATOR
+// ============================================================================
+function renderUnitsTable() {
+  const st = document.getElementById('filterUnitStatus').value;
+  const cat = document.getElementById('filterUnitCategory').value;
+  const pit = document.getElementById('filterUnitPit').value;
+
+  const filtered = DB.units.filter(u =>
+    (!st || u.status === st) &&
+    (!cat || u.equipment_category === cat) &&
+    (!pit || u.pit_name === pit)
+  );
+
+  document.getElementById('unitsTableBody').innerHTML = filtered.map(u => `
+    <tr>
+      <td class="fw-bold text-primary">${u.unit_code}</td>
+      <td><div>${u.equipment_category}</div><small class="text-muted">${u.model}</small></td>
+      <td><div>${u.manufacturer}</div><small class="font-monospace text-muted">${u.serial_number}</small></td>
+      <td><div>${u.pit_name}</div><small class="text-muted">${u.cluster_name}</small></td>
+      <td><span class="badge bg-light text-dark border">${u.cost_center}</span></td>
+      <td><strong>${Number(u.current_hm).toLocaleString()}</strong> HM<br><small class="text-muted">${Number(u.current_km).toLocaleString()} KM</small></td>
+      <td><div class="progress" style="height:6px;width:55px;"><div class="progress-bar bg-success" style="width:${u.current_fuel_pct}%"></div></div><small>${u.current_fuel_pct}%</small></td>
+      <td><span class="badge badge-${u.status}">${u.status}</span></td>
+      <td><span class="badge ${u.ai_risk_score > 65 ? 'bg-danger' : u.ai_risk_score > 35 ? 'bg-warning text-dark' : 'bg-success'}">${u.ai_risk_score}%</span></td>
+      <td>
+        <button class="btn btn-xs btn-outline-dark btn-sm py-0 px-2" onclick="openQrModal('${u.unit_code}')" title="Print QR Label"><i class="fa-solid fa-qrcode"></i></button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function resetUnitFilters() {
+  document.getElementById('filterUnitStatus').value = '';
+  document.getElementById('filterUnitCategory').value = '';
+  document.getElementById('filterUnitPit').value = '';
+  renderUnitsTable();
+}
+
+async function handleCreateUnit(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const payload = {
+    unit_code: fd.get('unit_code').toUpperCase(),
+    equipment_category: fd.get('equipment_category'),
+    model: fd.get('model'),
+    manufacturer: fd.get('manufacturer'),
+    serial_number: fd.get('serial_number'),
+    engine_number: fd.get('engine_number'),
+    commission_date: new Date().toISOString().slice(0, 10),
+    pit_name: fd.get('pit_name'),
+    cluster_name: 'Cluster Alpha',
+    cost_center: fd.get('cost_center'),
+    current_hm: Number(fd.get('current_hm')),
+    current_km: 0,
+    current_fuel_pct: 100,
+    status: 'RUNNING'
+  };
+
+  const apiRes = await apiRequest('/units', 'POST', payload);
+  const newUnit = {
+    unit_id: apiRes.ok ? apiRes.data.data.unit_id : 'u' + Date.now(),
+    ...payload,
+    ai_risk_score: 10,
+    ai_rul_hours: 16500
+  };
+  DB.units.push(newUnit);
+  addAudit(DB.currentUser.name, 'CREATE', 'UNIT_POPULATION', `Registered ${newUnit.unit_code}`);
+  bootstrap.Modal.getInstance(document.getElementById('addUnitModal')).hide();
+  e.target.reset();
+  refreshAllModules();
+  Swal.fire('Unit Registered', `${newUnit.unit_code} added to Master Fleet & QR Tag generated.`, 'success');
+}
+
+function openQrModal(unitCode) {
+  const u = DB.units.find(x => x.unit_code === unitCode);
+  if (!u) return;
+  document.getElementById('qrUnitTitle').textContent = `${u.unit_code} — ${u.model}`;
+  document.getElementById('qrUnitSubtitle').textContent = `S/N: ${u.serial_number} | ${u.pit_name}`;
+  document.getElementById('qrBarcodeText').textContent = `BSS-${u.unit_code}-${u.serial_number}`;
+  const container = document.getElementById('qrcodeCanvas');
+  container.innerHTML = '';
+  new QRCode(container, { text: JSON.stringify({ unit: u.unit_code, sn: u.serial_number, model: u.model }), width: 140, height: 140 });
+  new bootstrap.Modal(document.getElementById('qrModal')).show();
+}
+
+// ============================================================================
+// CONDITION MONITORING, OIL ANALYSIS & VHMS
+// ============================================================================
+function renderConditionInova() {
+  document.getElementById('inovaCardsContainer').innerHTML = DB.units.map(u => {
+    const score = Math.max(35, 100 - u.ai_risk_score);
+    return `
+      <div class="col-md-4">
+        <div class="card-bss p-3">
+          <div class="d-flex justify-content-between">
+            <strong>${u.unit_code} (${u.model})</strong>
+            <span class="badge ${score < 60 ? 'bg-danger' : score < 80 ? 'bg-warning text-dark' : 'bg-success'}">Inova Index: ${score}/100</span>
+          </div>
+          <small class="text-muted d-block mt-1">HM: ${u.current_hm} | Est. RUL: ${u.ai_rul_hours} hrs</small>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  if (CHARTS.inova) CHARTS.inova.destroy();
+  CHARTS.inova = new Chart(document.getElementById('chartInovaHealth'), {
+    type: 'bar',
+    data: {
+      labels: DB.units.map(u => u.unit_code),
+      datasets: [{ label: 'Inova Health Score (0-100)', data: DB.units.map(u => Math.max(35, 100 - u.ai_risk_score)), backgroundColor: '#0099ff' }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100 } } }
+  });
+}
+
+function openQuickInovaModal() {
+  Swal.fire('Inova Sync Complete', 'Condition Monitoring indices recalculated from live Oil Lab and VHMS telemetry.', 'info');
+}
+
+function renderOilTable() {
+  document.getElementById('oilTableBody').innerHTML = DB.oilSamples.map(o => `
+    <tr>
+      <td class="font-monospace small">${o.lab_sample_no}</td>
+      <td class="fw-bold">${o.unit_code}</td>
+      <td>${o.compartment}</td>
+      <td><small>${o.oil_brand}<br>${o.oil_hours}h</small></td>
+      <td>${o.fe_iron} / ${o.cu_copper} / ${o.pb_lead}</td>
+      <td>${o.si_silicon} / ${o.na_sodium} / ${o.k_potassium}</td>
+      <td>PQ: ${o.pq_index} | ${o.viscosity_100c} cSt</td>
+      <td><span class="badge badge-${o.diagnosis_status}">${o.diagnosis_status}</span></td>
+      <td><small>${o.auto_conclusion}</small><br><span class="badge bg-primary-subtle text-primary">${o.linked_wo}</span></td>
+    </tr>
+  `).join('');
+}
+
+async function handleCreateOil(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const unitId = fd.get('unit_id');
+  const unit = DB.units.find(u => u.unit_id === unitId);
+  const fe = Number(fd.get('fe_iron'));
+  const cu = Number(fd.get('cu_copper'));
+  const pb = Number(fd.get('pb_lead'));
+  const si = Number(fd.get('si_silicon'));
+  const na = Number(fd.get('na_sodium'));
+  const pq = Number(fd.get('pq_index'));
+
+  let status = 'NORMAL';
+  if (fe > 120 || cu > 45 || pb > 30 || pq > 40) status = 'CRITICAL';
+  else if (fe > 75 || cu > 25 || si > 20 || na > 25) status = 'CAUTION';
+
+  const conclusion = status === 'NORMAL'
+    ? 'All wear metals and viscosity within OEM specification.'
+    : `Abnormal wear/contamination detected (Fe:${fe}, Cu:${cu}, Si:${si}, PQ:${pq}). Immediate inspection advised.`;
+
+  let linkedWo = '-';
+  if (status !== 'NORMAL') {
+    linkedWo = `WO-OIL-${Date.now().toString().slice(-5)}`;
+    DB.workOrders.unshift({
+      wo_id: 'wo' + Date.now(), wo_number: linkedWo, unit_id: unitId, unit_code: unit.unit_code,
+      wo_type: 'PREDICTIVE', source: 'OIL_ANALYSIS', priority: status === 'CRITICAL' ? 'EMERGENCY' : 'HIGH',
+      description: `[${status} OIL - ${fd.get('compartment')}] ${conclusion}`, mechanic: 'Joko Susilo', downtime: 0, cost: 0, status: 'OPEN'
+    });
+    unit.ai_risk_score = Math.min(98, unit.ai_risk_score + (status === 'CRITICAL' ? 30 : 15));
+    unit.ai_rul_hours = Math.max(120, Math.round(unit.ai_rul_hours * 0.65));
+  }
+
+  await apiRequest('/oil-analysis', 'POST', {
+    unit_id: unitId, compartment: fd.get('compartment'), oil_brand: fd.get('oil_brand'),
+    oil_grade: '15W-40', oil_hours: Number(fd.get('oil_hours')), unit_hm_at_sample: unit.current_hm,
+    fe_iron: fe, cu_copper: cu, pb_lead: pb, si_silicon: si, na_sodium: na, pq_index: pq,
+    viscosity_100c: Number(fd.get('viscosity_100c'))
+  });
+
+  DB.oilSamples.unshift({
+    lab_sample_no: `LAB-2026-${Math.floor(100 + Math.random() * 899)}`,
+    unit_id: unitId, unit_code: unit.unit_code, compartment: fd.get('compartment'),
+    oil_brand: fd.get('oil_brand'), oil_hours: fd.get('oil_hours'),
+    fe_iron: fe, cu_copper: cu, pb_lead: pb, si_silicon: si, na_sodium: na, k_potassium: 3,
+    pq_index: pq, viscosity_100c: fd.get('viscosity_100c'), diagnosis_status: status,
+    auto_conclusion: conclusion, linked_wo: linkedWo
+  });
+
+  addAudit(DB.currentUser.name, 'LAB_EVAL', 'OIL_ANALYSIS', `${unit.unit_code} -> ${status}`);
+  bootstrap.Modal.getInstance(document.getElementById('addOilModal')).hide();
+  refreshAllModules();
+  Swal.fire(
+    `Diagnosis: ${status}`,
+    status === 'NORMAL' ? 'Oil health normal.' : `Automated Predictive Work Order ${linkedWo} created and AI RUL updated!`,
+    status === 'NORMAL' ? 'success' : 'warning'
+  );
+}
+
+function renderVhmsTable() {
+  document.getElementById('vhmsTableBody').innerHTML = DB.vhmsAlarms.map(a => `
+    <tr>
+      <td class="small">${a.occurred_at}</td>
+      <td class="fw-bold">${a.unit_code}</td>
+      <td class="font-monospace">${a.fault_code}</td>
+      <td>${a.component}</td>
+      <td>${a.description}</td>
+      <td><small>${a.telemetry_value} / ${a.threshold_value}</small></td>
+      <td><span class="badge ${a.severity === 'CRITICAL' ? 'bg-danger' : 'bg-warning text-dark'}">${a.severity}</span></td>
+      <td><span class="badge ${a.status === 'ACTIVE' ? 'bg-danger-subtle text-danger' : 'bg-success'}">${a.status}</span> <small>${a.linked_wo || ''}</small></td>
+      <td>${a.status === 'ACTIVE' ? `<button class="btn btn-sm btn-outline-success py-0" onclick="resolveVhms('${a.alarm_id}')">Resolve</button>` : '-'}</td>
+    </tr>
+  `).join('');
+}
+
+async function handleCreateVhms(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const unitId = fd.get('unit_id');
+  const unit = DB.units.find(u => u.unit_id === unitId);
+  const sev = fd.get('severity');
+  let linkedWo = '-';
+
+  if (sev === 'CRITICAL') {
+    unit.status = 'BREAKDOWN';
+    unit.ai_risk_score = Math.min(99, unit.ai_risk_score + 35);
+    linkedWo = `WO-VHMS-${Date.now().toString().slice(-5)}`;
+    DB.workOrders.unshift({
+      wo_id: 'wo' + Date.now(), wo_number: linkedWo, unit_id: unitId, unit_code: unit.unit_code,
+      wo_type: 'BREAKDOWN', source: 'VHMS', priority: 'EMERGENCY',
+      description: `[VHMS ${fd.get('fault_code')}] ${fd.get('description')}`, mechanic: 'Joko Susilo', downtime: 1.0, cost: 0, status: 'OPEN'
+    });
+  }
+
+  await apiRequest('/vhms-alarms', 'POST', {
+    unit_id: unitId, fault_code: fd.get('fault_code'), component: fd.get('component'),
+    description: fd.get('description'), severity: sev, telemetry_value: 'HIGH', threshold_value: 'OEM LIMIT'
+  });
+
+  DB.vhmsAlarms.unshift({
+    alarm_id: 'al' + Date.now(), occurred_at: new Date().toISOString().replace('T', ' ').slice(0, 16),
+    unit_id: unitId, unit_code: unit.unit_code, fault_code: fd.get('fault_code'),
+    component: fd.get('component'), description: fd.get('description'),
+    telemetry_value: 'EXCEEDED', threshold_value: 'OEM LIMIT', severity: sev, status: 'ACTIVE', linked_wo: linkedWo
+  });
+
+  addAudit(DB.currentUser.name, 'VHMS_FAULT', 'VHMS', `${unit.unit_code} ${fd.get('fault_code')}`);
+  bootstrap.Modal.getInstance(document.getElementById('addVhmsModal')).hide();
+  refreshAllModules();
+}
+
+function resolveVhms(alarmId) {
+  const al = DB.vhmsAlarms.find(a => a.alarm_id === alarmId);
+  if (al) al.status = 'RESOLVED';
+  refreshAllModules();
+}
+
+// ============================================================================
+// PAP, PPM, WORK ORDERS & FAILURE ANALYSIS
+// ============================================================================
+function renderPapTable() {
+  document.getElementById('papTableBody').innerHTML = DB.papInspections.map(p => `
+    <tr>
+      <td class="font-monospace">${p.pap_number}</td>
+      <td>${p.inspection_date}</td>
+      <td class="fw-bold">${p.unit_code}</td>
+      <td>${p.inspection_type}</td>
+      <td><span class="badge ${p.result_status === 'PASS' ? 'bg-success' : 'bg-danger'}">${p.result_status}</span></td>
+      <td><small><strong>Finding:</strong> ${p.finding_description}<br><strong>Action:</strong> ${p.corrective_action}</small></td>
+      <td><small>${p.pic_name}<br>Due: ${p.due_date}</small></td>
+      <td><span class="badge ${p.verification_status === 'CLOSED' ? 'bg-success' : 'bg-warning text-dark'}">${p.verification_status}</span></td>
+      <td>${p.verification_status !== 'CLOSED' ? `<button class="btn btn-sm btn-outline-primary py-0" onclick="verifyPap('${p.pap_id}')">Verify & Close</button>` : '<i class="fa-solid fa-check-double text-success"></i>'}</td>
+    </tr>
+  `).join('');
+}
+
+async function handleCreatePap(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const unitId = fd.get('unit_id');
+  const unit = DB.units.find(u => u.unit_id === unitId);
+  const resStatus = fd.get('result_status');
+
+  if (resStatus === 'FINDING_MAJOR') {
+    DB.workOrders.unshift({
+      wo_id: 'wo' + Date.now(), wo_number: `WO-PAP-${Date.now().toString().slice(-5)}`,
+      unit_id: unitId, unit_code: unit.unit_code, wo_type: 'CORRECTIVE', source: 'PAP',
+      priority: 'HIGH', description: `[PAP Finding] ${fd.get('finding_description')}`, mechanic: 'Agus Setiawan', downtime: 0, cost: 0, status: 'OPEN'
+    });
+  }
+
+  await apiRequest('/pap', 'POST', {
+    unit_id: unitId, inspection_type: fd.get('inspection_type'), result_status: resStatus,
+    finding_description: fd.get('finding_description'), corrective_action: fd.get('corrective_action'), due_date: fd.get('due_date')
+  });
+
+  DB.papInspections.unshift({
+    pap_id: 'pap' + Date.now(), pap_number: `PAP-2026-${Math.floor(200 + Math.random() * 700)}`,
+    inspection_date: new Date().toISOString().slice(0, 10), unit_id: unitId, unit_code: unit.unit_code,
+    inspection_type: fd.get('inspection_type'), result_status: resStatus,
+    finding_description: fd.get('finding_description'), corrective_action: fd.get('corrective_action'),
+    pic_name: DB.currentUser.name, due_date: fd.get('due_date'), verification_status: resStatus === 'PASS' ? 'CLOSED' : 'OPEN'
+  });
+
+  bootstrap.Modal.getInstance(document.getElementById('addPapModal')).hide();
+  refreshAllModules();
+}
+
+function verifyPap(papId) {
+  const p = DB.papInspections.find(x => x.pap_id === papId);
+  if (p) p.verification_status = 'CLOSED';
+  refreshAllModules();
+}
+
+function renderPpmTable() {
+  document.getElementById('ppmTableBody').innerHTML = DB.ppmSchedules.map(p => `
+    <tr>
+      <td class="font-monospace">${p.ppm_code}</td>
+      <td class="fw-bold">${p.unit_code}</td>
+      <td>${p.service_interval}</td>
+      <td>${p.planned_hm} HM</td>
+      <td>${p.scheduled_date}</td>
+      <td>
+        <div class="progress" style="height:8px;width:90px;"><div class="progress-bar bg-primary" style="width:${p.completion_pct}%"></div></div>
+        <small>${p.completion_pct}%</small>
+      </td>
+      <td>${p.technician_name}</td>
+      <td><span class="badge ${p.status === 'COMPLETED' ? 'bg-success' : 'bg-info text-dark'}">${p.status}</span></td>
+      <td>${p.status !== 'COMPLETED' ? `<button class="btn btn-sm btn-success py-0" onclick="completePpm('${p.ppm_id}')">Complete & Sign</button>` : '<span class="text-success small fw-semibold">Signed Off</span>'}</td>
+    </tr>
+  `).join('');
+}
+
+function scheduleNewPPM() {
+  const u = DB.units[0];
+  DB.ppmSchedules.unshift({
+    ppm_id: 'ppm' + Date.now(), ppm_code: `PPM-2026-${Math.floor(600 + Math.random() * 300)}`,
+    unit_id: u.unit_id, unit_code: u.unit_code, service_interval: 'PS1 (250H)',
+    planned_hm: Number(u.current_hm) + 250, scheduled_date: new Date().toISOString().slice(0, 10),
+    completion_pct: 0, technician_name: 'Joko Susilo', status: 'SCHEDULED'
+  });
+  refreshAllModules();
+  Swal.fire('PPM Scheduled', `Next 250H Preventive Maintenance scheduled for ${u.unit_code}.`, 'success');
+}
+
+function completePpm(ppmId) {
+  const p = DB.ppmSchedules.find(x => x.ppm_id === ppmId);
+  if (p) {
+    p.status = 'COMPLETED';
+    p.completion_pct = 100;
+    addAudit(DB.currentUser.name, 'COMPLETE_PPM', 'PPM', `${p.ppm_code} (${p.unit_code})`);
+  }
+  refreshAllModules();
+}
+
+function renderWorkOrdersTable() {
+  document.getElementById('woTableBody').innerHTML = DB.workOrders.map(w => `
+    <tr>
+      <td class="font-monospace fw-bold">${w.wo_number}</td>
+      <td class="fw-bold">${w.unit_code}</td>
+      <td><span class="badge bg-secondary">${w.wo_type}</span><br><small class="text-muted">${w.source}</small></td>
+      <td><span class="badge ${w.priority === 'EMERGENCY' ? 'bg-danger' : 'bg-warning text-dark'}">${w.priority}</span></td>
+      <td><small>${w.description}</small></td>
+      <td>${w.mechanic}</td>
+      <td>${w.downtime} hrs<br><strong>$${Number(w.cost).toLocaleString()}</strong></td>
+      <td><span class="badge ${w.status === 'COMPLETED' ? 'bg-success' : 'bg-primary'}">${w.status}</span></td>
+      <td>
+        ${w.status !== 'COMPLETED' ? `<button class="btn btn-sm btn-success py-0" onclick="completeWorkOrder('${w.wo_id}')">Complete WO</button>` : '<span class="text-success small">Closed</span>'}
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function handleCreateWo(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const unitId = fd.get('unit_id');
+  const unit = DB.units.find(u => u.unit_id === unitId);
+  const woType = fd.get('wo_type');
+
+  if (woType === 'BREAKDOWN') unit.status = 'BREAKDOWN';
+
+  await apiRequest('/work-orders', 'POST', {
+    unit_id: unitId, wo_type: woType, priority: fd.get('priority'), problem_description: fd.get('problem_description')
+  });
+
+  DB.workOrders.unshift({
+    wo_id: 'wo' + Date.now(), wo_number: `WO-2026-${Math.floor(300 + Math.random() * 600)}`,
+    unit_id: unitId, unit_code: unit.unit_code, wo_type: woType, source: 'MANUAL',
+    priority: fd.get('priority'), description: fd.get('problem_description'),
+    mechanic: fd.get('mechanic'), downtime: woType === 'BREAKDOWN' ? 2.0 : 0, cost: 450, status: 'OPEN'
+  });
+
+  bootstrap.Modal.getInstance(document.getElementById('addWoModal')).hide();
+  refreshAllModules();
+}
+
+function completeWorkOrder(woId) {
+  const w = DB.workOrders.find(x => x.wo_id === woId);
+  if (!w) return;
+  w.status = 'COMPLETED';
+  const unit = DB.units.find(u => u.unit_code === w.unit_code);
+  if (unit) {
+    unit.status = 'RUNNING';
+    unit.ai_risk_score = Math.max(12, unit.ai_risk_score - 25);
+  }
+  addAudit(DB.currentUser.name, 'COMPLETE_WO', 'WORK_ORDER', `${w.wo_number} -> ${w.unit_code} RUNNING`);
+  refreshAllModules();
+  Swal.fire('Work Order Completed', `${w.wo_number} closed. ${w.unit_code} automatically restored to RUNNING status.`, 'success');
+}
+
+function renderFarCards() {
+  document.getElementById('farCardsContainer').innerHTML = DB.farReports.map(f => `
+    <div class="col-12">
+      <div class="card-bss p-3">
+        <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+          <div><span class="badge bg-danger me-2">${f.far_number}</span><strong>${f.unit_code} — ${f.failed_component}</strong> (${f.failure_mode})</div>
+          <span class="text-muted small">Failure Date: ${f.failure_date}</span>
+        </div>
+        <div class="row g-2 small">
+          <div class="col-md-6"><strong>5-Why RCA Chain:</strong><p class="mb-1 text-muted">${f.five_why}</p></div>
+          <div class="col-md-6"><strong>Fishbone (6M Analysis):</strong><p class="mb-1 text-muted">${f.fishbone}</p></div>
+          <div class="col-md-4"><strong>Corrective Action:</strong><p class="mb-0">${f.corrective_action}</p></div>
+          <div class="col-md-4"><strong>Preventive Action (PICA):</strong><p class="mb-0">${f.preventive_action}</p></div>
+          <div class="col-md-4"><strong>Lessons Learned:</strong><p class="mb-0 text-primary">${f.lessons_learned}</p></div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function handleCreateFar(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const unit = DB.units.find(u => u.unit_id === fd.get('unit_id'));
+  DB.farReports.unshift({
+    far_number: `FAR-2026-${Math.floor(100 + Math.random() * 800)}`,
+    unit_code: unit.unit_code, failure_date: new Date().toISOString().slice(0, 10),
+    failed_component: fd.get('failed_component'), failure_mode: fd.get('failure_mode'),
+    five_why: fd.get('five_why'), fishbone: fd.get('fishbone'),
+    corrective_action: fd.get('corrective_action'), preventive_action: fd.get('preventive_action'),
+    lessons_learned: fd.get('lessons_learned')
+  });
+  bootstrap.Modal.getInstance(document.getElementById('addFarModal')).hide();
+  refreshAllModules();
+}
+
+// ============================================================================
+// SCHEDULE, INVENTORY, COST, DOCUMENTS, REPORTS & AI PREDICTIVE
+// ============================================================================
+function renderMasterSchedule() {
+  const rows = [
+    { date: '2026-11-24', unit: 'DT-7851', cat: 'PPM Service', scope: 'PS1 250H Periodic Service & Oil Sampling', hm: '9,500 HM', team: 'Field Crew A', status: 'IN_PROGRESS' },
+    { date: '2026-11-26', unit: 'EX-2001', cat: 'PPM Service', scope: 'PS2 500H Hydraulic & Engine Filter Change', hm: '14,500 HM', team: 'Field Crew B', status: 'SCHEDULED' },
+    { date: '2026-12-05', unit: 'EX-2002', cat: 'Component Overhaul', scope: 'Main Hydraulic Pump #1 & Swing Motor Rebuild', hm: '17,000 HM', team: 'Workshop Bay 1', status: 'PLANNED' },
+    { date: '2026-12-12', unit: 'DZ-3751', cat: 'Undercarriage', scope: 'Track Shoe & Idler Ultrasonic Calibration', hm: '11,750 HM', team: 'Reliability Team', status: 'SCHEDULED' }
+  ];
+  document.getElementById('masterScheduleBody').innerHTML = rows.map(r => `
+    <tr>
+      <td class="fw-semibold">${r.date}</td><td class="fw-bold text-primary">${r.unit}</td><td>${r.cat}</td>
+      <td>${r.scope}</td><td>${r.hm}</td><td>${r.team}</td>
+      <td><span class="badge bg-info text-dark">${r.status}</span></td>
+    </tr>
+  `).join('');
+}
+
+function renderInventory() {
+  document.getElementById('inventoryTableBody').innerHTML = DB.inventory.map(i => {
+    const low = i.current_stock <= i.min_stock;
+    return `
+      <tr>
+        <td class="font-monospace">${i.part_number}</td>
+        <td>${i.part_name}</td>
+        <td>${i.category}</td>
+        <td>${i.warehouse}</td>
+        <td><strong>${i.current_stock}</strong> <small class="text-muted">(${i.min_stock}/${i.max_stock})</small></td>
+        <td>$${Number(i.unit_cost).toLocaleString()}</td>
+        <td><span class="badge ${low ? 'bg-danger' : 'bg-success'}">${low ? 'REORDER' : 'OPTIMAL'}</span></td>
+      </tr>
+    `;
+  }).join('');
+
+  document.getElementById('stockCardFeed').innerHTML = DB.stockTransactions.map(t => `
+    <div class="p-2 border rounded small">
+      <div class="d-flex justify-content-between">
+        <span class="badge ${t.tx_type === 'ISSUE' ? 'bg-warning text-dark' : 'bg-success'}">${t.tx_type} (${t.quantity})</span>
+        <span class="text-muted">${t.timestamp}</span>
+      </div>
+      <div class="mt-1"><strong>${t.part_number}</strong> • Unit: ${t.unit_code} • Ref: ${t.wo_number}</div>
+    </div>
+  `).join('');
+}
+
+function handleStockTx(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const item = DB.inventory.find(i => i.item_id === fd.get('item_id'));
+  const txType = fd.get('tx_type');
+  const qty = Number(fd.get('quantity'));
+  const unitCode = fd.get('unit_code');
+
+  if (txType === 'ISSUE') {
+    if (item.current_stock < qty) return Swal.fire('Insufficient Stock', 'Requested quantity exceeds warehouse balance.', 'error');
+    item.current_stock -= qty;
+    const unit = DB.units.find(u => u.unit_code === unitCode);
+    DB.costs.unshift({
+      cost_date: new Date().toISOString().slice(0, 10), unit_code: unitCode, cost_center: unit?.cost_center || 'CC-GEN',
+      category: 'PARTS', description: `Issued ${qty}x ${item.part_name}`, wo_number: fd.get('wo_number') || '-', amount: qty * item.unit_cost
+    });
+  } else {
+    item.current_stock += qty;
+  }
+
+  DB.stockTransactions.unshift({
+    timestamp: new Date().toISOString().replace('T', ' ').slice(0, 16),
+    part_number: item.part_number, tx_type: txType, quantity: qty,
+    unit_code: txType === 'ISSUE' ? unitCode : '-', wo_number: fd.get('wo_number') || '-'
+  });
+
+  bootstrap.Modal.getInstance(document.getElementById('stockTxModal')).hide();
+  refreshAllModules();
+  Swal.fire('Stock Card Updated', `${txType} posted and Equipment Cost Ledger synchronized.`, 'success');
+}
+
+function renderCostLedger() {
+  document.getElementById('costTableBody').innerHTML = DB.costs.map(c => `
+    <tr>
+      <td>${c.cost_date}</td>
+      <td class="fw-bold">${c.unit_code}</td>
+      <td>${c.cost_center}</td>
+      <td><span class="badge bg-light text-dark border">${c.category}</span></td>
+      <td>${c.description}</td>
+      <td class="font-monospace small">${c.wo_number}</td>
+      <td class="text-end fw-bold">$${Number(c.amount).toLocaleString()}</td>
+    </tr>
+  `).join('');
+}
+
+function handleAddCost(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const unitCode = fd.get('unit_code');
+  const unit = DB.units.find(u => u.unit_code === unitCode);
+  DB.costs.unshift({
+    cost_date: fd.get('cost_date'), unit_code: unitCode, cost_center: unit?.cost_center || 'CC-GEN',
+    category: fd.get('cost_category'), description: fd.get('description'), wo_number: '-', amount: Number(fd.get('amount'))
+  });
+  bootstrap.Modal.getInstance(document.getElementById('addCostModal')).hide();
+  refreshAllModules();
+}
+
+function renderDocuments() {
+  document.getElementById('documentsTableBody').innerHTML = DB.documents.map(d => `
+    <tr>
+      <td class="font-monospace">${d.doc_number}</td>
+      <td class="fw-semibold">${d.title}</td>
+      <td><span class="badge bg-primary-subtle text-primary">${d.doc_type}</span></td>
+      <td>${d.equipment_model}</td>
+      <td>${d.revision}</td>
+      <td>${d.file_format}</td>
+      <td><button class="btn btn-sm btn-outline-primary py-0" onclick="Swal.fire('Document Viewer','Opening ${d.title} (${d.revision})','info')"><i class="fa-solid fa-eye"></i> View</button></td>
+    </tr>
+  `).join('');
+}
+
+function uploadNewDocument() {
+  DB.documents.unshift({
+    doc_number: `DOC-BSS-${Math.floor(100 + Math.random() * 899)}`,
+    title: 'Hydraulic Pump Commissioning & Flushing Checklist',
+    doc_type: 'SOP', equipment_model: 'PC2000-8 / EX2600-7', revision: 'Rev 1.0', file_format: 'PDF'
+  });
+  refreshAllModules();
+  Swal.fire('Document Uploaded', 'New revision indexed in Technical Document Control.', 'success');
+}
+
+function renderReportsGrid() {
+  const packages = [
+    { title: 'Daily Fleet Availability & Breakdown Report', desc: 'Shift-by-shift PA, MA, UA, active breakdowns, and VHMS alarm summary.' },
+    { title: 'Monthly Reliability & MTBF/MTTR Executive Pack', desc: 'Weibull failure trends, top cost drivers, and FAR/PICA closure compliance.' },
+    { title: 'Tribology & Oil Health Condition Summary', desc: 'Fleet-wide wear metal trending, contamination alerts, and drain interval audit.' },
+    { title: 'Maintenance Cost & Spare Parts Consumption Ledger', desc: 'Cost per HM/KM breakdown by Pit, Cluster, Cost Center, and Equipment Model.' }
+  ];
+  document.getElementById('reportCardsGrid').innerHTML = packages.map(p => `
+    <div class="col-md-6">
+      <div class="card-bss p-3 h-100 d-flex flex-column justify-content-between">
+        <div>
+          <h6 class="fw-bold">${p.title}</h6>
+          <p class="small text-muted">${p.desc}</p>
+        </div>
+        <div class="d-flex gap-2">
+          <button class="btn btn-sm btn-outline-success" onclick="exportDashboardExcel()"><i class="fa-solid fa-file-excel me-1"></i>Excel</button>
+          <button class="btn btn-sm btn-outline-danger" onclick="window.print()"><i class="fa-solid fa-file-pdf me-1"></i>PDF / Print</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderAiPredictive() {
+  document.getElementById('aiPredictiveTableBody').innerHTML = DB.units.map(u => {
+    const tier = u.ai_risk_score > 65 ? 'CRITICAL PRIORITY' : u.ai_risk_score > 35 ? 'ELEVATED WATCH' : 'NORMAL HEALTH';
+    const driver = u.ai_risk_score > 65 ? 'Critical Oil Wear + Active VHMS Fault' : u.ai_risk_score > 35 ? 'Elevated Silicon Dust Ingress' : 'Nominal Operating Parameters';
+    const rec = u.ai_risk_score > 65 ? 'Immediate Component Swap & Hydraulic Flush' : u.ai_risk_score > 35 ? 'Inspect Air Intake & Resample Oil +125H' : 'Continue Standard 250H PPM Cycle';
+    return `
+      <tr>
+        <td class="fw-bold text-primary">${u.unit_code}</td>
+        <td>${u.model} (${u.current_hm} HM)</td>
+        <td><strong>${u.ai_risk_score} / 100</strong></td>
+        <td><span class="badge ${u.ai_risk_score > 65 ? 'bg-danger' : u.ai_risk_score > 35 ? 'bg-warning text-dark' : 'bg-success'}">${tier}</span></td>
+        <td class="fw-bold">${Number(u.ai_rul_hours).toLocaleString()} HM</td>
+        <td><small>${driver}</small></td>
+        <td><small class="fw-semibold">${rec}</small></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderNotificationsAndAudits() {
+  document.getElementById('notifCountBadge').textContent = DB.notifications.length;
+  document.getElementById('notifDropdownList').innerHTML = DB.notifications.map(n => `
+    <div class="p-2 border-bottom small">
+      <div class="fw-bold text-${n.severity}">${n.title}</div>
+      <div class="text-muted">${n.message}</div>
+    </div>
+  `).join('');
+
+  document.getElementById('auditLogTableBody').innerHTML = DB.auditLogs.map(a => `
+    <tr>
+      <td class="small">${a.timestamp}</td>
+      <td>${a.user}</td>
+      <td><span class="badge bg-secondary">${a.action}</span></td>
+      <td>${a.module}</td>
+      <td class="small">${a.record}</td>
+    </tr>
+  `).join('');
+}
+
+// ============================================================================
+// GLOBAL SEARCH, BULK EXCEL IMPORT/EXPORT & SNAPSHOT BACKUP
+// ============================================================================
+function handleGlobalSearch(q) {
+  const box = document.getElementById('globalSearchResults');
+  const query = q.trim().toLowerCase();
+  if (!query) { box.style.display = 'none'; return; }
+
+  const matches = [];
+  DB.units.forEach(u => {
+    if (u.unit_code.toLowerCase().includes(query) || u.model.toLowerCase().includes(query)) {
+      matches.push({ module: 'units', label: `Unit ${u.unit_code} (${u.model}) — ${u.status}` });
+    }
+  });
+  DB.workOrders.forEach(w => {
+    if (w.wo_number.toLowerCase().includes(query) || w.description.toLowerCase().includes(query)) {
+      matches.push({ module: 'workorders', label: `${w.wo_number} [${w.unit_code}] — ${w.description.slice(0, 45)}...` });
+    }
+  });
+  DB.inventory.forEach(i => {
+    if (i.part_number.toLowerCase().includes(query) || i.part_name.toLowerCase().includes(query)) {
+      matches.push({ module: 'inventory', label: `Part ${i.part_number}: ${i.part_name} (Stock: ${i.current_stock})` });
+    }
+  });
+
+  box.innerHTML = matches.length
+    ? matches.map(m => `<div class="p-2 border-bottom small" style="cursor:pointer;" onclick="jumpToModule('${m.module}')"><span class="badge bg-primary me-1">${m.module.toUpperCase()}</span> ${m.label}</div>`).join('')
+    : '<div class="p-2 small text-muted">No matching records across fleet modules.</div>';
+  box.style.display = 'block';
+}
+
+function jumpToModule(mod) {
+  document.getElementById('globalSearchResults').style.display = 'none';
+  document.querySelector(`.nav-link-bss[data-target="${mod}"]`)?.click();
+}
+
+function exportTableToExcel(key, filename) {
+  const ws = XLSX.utils.json_to_sheet(DB[key]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'BSS_Data');
+  XLSX.writeFile(wb, `${filename}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+}
+
+function exportDashboardExcel() {
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.units), 'Fleet_Units');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.workOrders), 'Work_Orders');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.costs), 'Equipment_Costs');
+  XLSX.writeFile(wb, `BSS_Plant_Executive_Report_${new Date().toISOString().slice(0, 10)}.xlsx`);
+}
+
+function triggerBulkUnitImport() {
+  document.getElementById('bulkUnitFileInput').click();
+}
+
+function handleBulkUnitFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    const wb = XLSX.read(evt.target.result, { type: 'binary' });
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+    rows.forEach((r, idx) => {
+      if (r.unit_code) {
+        DB.units.push({
+          unit_id: 'imp' + Date.now() + idx,
+          unit_code: String(r.unit_code).toUpperCase(),
+          equipment_category: r.equipment_category || 'Excavator',
+          model: r.model || 'PC2000-8',
+          manufacturer: r.manufacturer || 'Komatsu',
+          serial_number: r.serial_number || `SN-${Date.now()}-${idx}`,
+          engine_number: r.engine_number || 'ENG-001',
+          pit_name: r.pit_name || 'Pit North',
+          cluster_name: 'Cluster Alpha',
+          cost_center: r.cost_center || 'CC-OB-101',
+          current_hm: Number(r.current_hm || 0),
+          current_km: 0,
+          current_fuel_pct: 100,
+          status: 'RUNNING',
+          ai_risk_score: 12,
+          ai_rul_hours: 15000
+        });
+      }
+    });
+    refreshAllModules();
+    Swal.fire('Bulk Import Complete', `${rows.length} units imported into Unit Population.`, 'success');
+  };
+  reader.readAsBinaryString(file);
+}
+
+function backupDatabaseJson() {
+  const blob = new Blob([JSON.stringify(DB, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `BSS_EAM_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+}
+
+// Initialize initial workspace state
+window.addEventListener('DOMContentLoaded', () => {
+  applyRBACToUI();
+  refreshAllModules();
+});
+</script>
+</body>
+</html>
