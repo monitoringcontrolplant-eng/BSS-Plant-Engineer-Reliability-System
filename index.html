@@ -396,7 +396,7 @@
               </div>
               <div class="kpi-icon bg-info-subtle text-info"><i class="fa-solid fa-chart-line"></i></div>
             </div>
-            <small class="text-muted mt-2 d-block">Reliability ($R_{24h}$): <strong id="kpiReliability">0%</strong></small>
+            <small class="text-muted mt-2 d-block">Reliability (R24h): <strong id="kpiReliability">0%</strong></small>
           </div>
         </div>
 
@@ -515,9 +515,10 @@
       <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
         <div>
           <h4 class="fw-bold mb-0">Unit Population & Equipment Master Data</h4>
-          <small class="text-muted">Complete heavy mining fleet registry with QR labeling, HM/KM telemetry, and bulk Excel import/export</small>
+          <small class="text-muted">Complete heavy mining fleet registry with QR labeling, HM/KM telemetry, and auto-sync Google Sheet CSV</small>
         </div>
         <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-sm btn-outline-primary" onclick="syncUnitsFromGoogleSheet({ silent: false, replaceExisting: true })"><i class="fa-solid fa-rotate me-1"></i>Sync Google Sheet</button>
           <button class="btn btn-sm btn-outline-success" onclick="exportTableToExcel('units', 'BSS_Unit_Population')"><i class="fa-solid fa-file-excel me-1"></i>Export Excel</button>
           <button class="btn btn-sm btn-outline-secondary" onclick="triggerBulkUnitImport()"><i class="fa-solid fa-file-import me-1"></i>Bulk Import CSV/Excel</button>
           <input type="file" id="bulkUnitFileInput" accept=".csv,.xlsx" class="d-none" onchange="handleBulkUnitFile(event)" />
@@ -614,7 +615,7 @@
       <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
         <div>
           <h4 class="fw-bold mb-0">Tribology & Oil Analysis Laboratory</h4>
-          <small class="text-muted">Automated wear metal ($Fe, Cu, Cr, Pb, Al, Sn, Ni$), contamination ($Si, Na, K$), PQ Index evaluation & auto-Work Order trigger</small>
+          <small class="text-muted">Automated wear metal (Fe, Cu, Pb, Si, Na, K), PQ Index evaluation & auto-Work Order trigger</small>
         </div>
         <button class="btn btn-sm btn-primary perm-create" style="background:#0b3b75;" data-bs-toggle="modal" data-bs-target="#addOilModal">
           <i class="fa-solid fa-flask-vial me-1"></i>Submit Lab Result
@@ -1014,6 +1015,10 @@
             <input type="text" id="settingApiUrl" class="form-control" value="http://localhost:5000/api" />
           </div>
           <div class="col-md-6">
+            <label class="form-label small fw-semibold">Google Spreadsheet CSV Feed URL</label>
+            <input type="text" id="settingCsvUrl" class="form-control" value="https://docs.google.com/spreadsheets/d/e/2PACX-1vTT1tdJuGPMLSqceQcx6j4W7YyC6U4dZsAB9H_nnLPdLWhfxyma7SAEK6rJpg-qdwuyNhxPPAz4eg6e/pub?output=csv" />
+          </div>
+          <div class="col-md-6">
             <label class="form-label small fw-semibold">WhatsApp & Email Alert Gateway</label>
             <select class="form-select">
               <option selected>Enabled (Critical VHMS, Critical Oil, Overdue PPM)</option>
@@ -1027,7 +1032,7 @@
           </div>
           <div class="col-12 pt-2 border-top d-flex gap-2">
             <button class="btn btn-primary btn-sm" onclick="backupDatabaseJson()"><i class="fa-solid fa-download me-1"></i>Backup System Snapshot (JSON)</button>
-            <button class="btn btn-outline-success btn-sm" onclick="Swal.fire('Configuration Saved','Enterprise settings and alert thresholds updated.','success')">Save Settings</button>
+            <button class="btn btn-outline-success btn-sm" onclick="syncUnitsFromGoogleSheet({ silent: false, replaceExisting: true })"><i class="fa-solid fa-rotate me-1"></i>Save & Sync CSV Feed</button>
           </div>
         </div>
       </div>
@@ -1187,7 +1192,7 @@
         <div class="col-md-4"><label class="form-label small">Failed Component</label><input name="failed_component" class="form-control" placeholder="Main Hydraulic Pump" required /></div>
         <div class="col-md-4"><label class="form-label small">Failure Mode</label><input name="failure_mode" class="form-control" placeholder="Cavitation & Piston Seizure" required /></div>
         <div class="col-md-6"><label class="form-label small">3-Why / 5-Why Chain</label><textarea name="five_why" class="form-control" rows="2" placeholder="Why 1: Pressure drop -> Why 2: Suction strainer clogged -> Why 3: Missed 500H hydraulic tank breather service"></textarea></div>
-        <div class="col-md-6"><label class="form-label small">Fishbone (6M: Man, Machine, Method, Material)</label><textarea name="fishbone" class="form-control" rows="2" placeholder="Method: Tank flush skipped | Material: Breather element saturated"></textarea></div>
+        <div class="col-md-6"><label class="form-label small">Fishbone (6M: Man, Machine, Method, Material)</label><textarea name="fishbone" class="form-control" rows="2" placeholder="Method: Breather interval extended | Material: Desiccant saturated"></textarea></div>
         <div class="col-md-6"><label class="form-label small">Corrective Action (Immediate)</label><input name="corrective_action" class="form-control" required /></div>
         <div class="col-md-6"><label class="form-label small">Preventive Action (PICA)</label><input name="preventive_action" class="form-control" required /></div>
         <div class="col-12"><label class="form-label small">Engineering Lessons Learned</label><input name="lessons_learned" class="form-control" required /></div>
@@ -1236,13 +1241,15 @@
 </div>
 
 <!-- ========================================================================
-     4. APPLICATION JAVASCRIPT ENGINE (FULL INTER-MODULE STATE & CHARTS)
+     4. APPLICATION JAVASCRIPT ENGINE (FULL INTER-MODULE STATE, CSV & CHARTS)
 ========================================================================= -->
 <script>
 window.BSS_CONFIG = {
   API_URL: 'http://localhost:5000/api',
+  CSV_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTT1tdJuGPMLSqceQcx6j4W7YyC6U4dZsAB9H_nnLPdLWhfxyma7SAEK6rJpg-qdwuyNhxPPAz4eg6e/pub?output=csv',
   JWT_TOKEN: null,
-  IS_LIVE_BACKEND: false
+  IS_LIVE_BACKEND: false,
+  IS_CSV_SYNCED: false
 };
 
 // Unified REST API Client with Graceful Hybrid Fallback
@@ -1265,23 +1272,26 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
     const data = await res.json();
     if (res.ok && data.success !== false) {
       window.BSS_CONFIG.IS_LIVE_BACKEND = true;
-      updateConnectionBadge(true);
+      updateConnectionBadge();
       return { ok: true, data };
     }
     return { ok: false, error: data.message || 'API Error' };
   } catch (err) {
     window.BSS_CONFIG.IS_LIVE_BACKEND = false;
-    updateConnectionBadge(false);
+    updateConnectionBadge();
     return { ok: false, offline: true };
   }
 }
 
-function updateConnectionBadge(isLive) {
+function updateConnectionBadge() {
   const badge = document.getElementById('livePipelineBadge');
   if (!badge) return;
-  if (isLive) {
+  if (window.BSS_CONFIG.IS_LIVE_BACKEND) {
     badge.className = 'badge bg-success-subtle text-success border border-success-subtle d-none d-md-inline-block';
     badge.innerHTML = '<i class="fa-solid fa-server me-1"></i>PostgreSQL Live API';
+  } else if (window.BSS_CONFIG.IS_CSV_SYNCED) {
+    badge.className = 'badge bg-success-subtle text-success border border-success-subtle d-none d-md-inline-block';
+    badge.innerHTML = '<i class="fa-solid fa-file-csv me-1"></i>Google Sheet CSV Synced';
   } else {
     badge.className = 'badge bg-primary-subtle text-primary border border-primary-subtle d-none d-md-inline-block';
     badge.innerHTML = '<i class="fa-solid fa-microchip me-1"></i>Embedded EAM Engine';
@@ -1373,6 +1383,119 @@ const DB = {
 const CHARTS = {};
 
 // ============================================================================
+// GOOGLE SPREADSHEET CSV AUTO-LOADER
+// ============================================================================
+function getCsvFeedUrl() {
+  const inputUrl = document.getElementById('settingCsvUrl')?.value?.trim();
+  return inputUrl || window.BSS_CONFIG.CSV_URL;
+}
+
+function normalizeSheetRow(rawRow, idx) {
+  const map = {};
+  Object.keys(rawRow).forEach((k) => {
+    const cleanKey = String(k).trim().toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    map[cleanKey] = rawRow[k];
+  });
+
+  const pick = (...keys) => {
+    for (const key of keys) {
+      if (map[key] !== undefined && map[key] !== null && String(map[key]).trim() !== '') {
+        return map[key];
+      }
+    }
+    return undefined;
+  };
+
+  const unitCode = pick('unit_code', 'code_unit', 'unit', 'kode_unit', 'unit_id_code', 'no_unit');
+  if (!unitCode) return null;
+
+  const rawStatus = String(pick('status', 'unit_status', 'status_unit') || 'RUNNING').trim().toUpperCase();
+  const status = ['RUNNING', 'STANDBY', 'BREAKDOWN'].includes(rawStatus) ? rawStatus : 'RUNNING';
+
+  const currentHm = Number(String(pick('current_hm', 'hm', 'hour_meter', 'current_hm_km') || 0).replace(/[^0-9.]/g, '')) || 0;
+  const currentKm = Number(String(pick('current_km', 'km', 'odometer') || 0).replace(/[^0-9.]/g, '')) || 0;
+  const fuelRaw = Number(String(pick('current_fuel_pct', 'fuel', 'fuel_pct', 'fuel_%') || 80).replace(/[^0-9.]/g, ''));
+  const currentFuelPct = Number.isFinite(fuelRaw) ? Math.min(100, Math.max(0, fuelRaw)) : 80;
+
+  return {
+    unit_id: `gsheet_${String(unitCode).trim()}_${idx}`,
+    unit_code: String(unitCode).trim().toUpperCase(),
+    equipment_category: String(pick('equipment_category', 'category', 'kategori', 'equipment_type') || 'Heavy Equipment').trim(),
+    model: String(pick('model', 'unit_model', 'tipe_unit') || '-').trim(),
+    manufacturer: String(pick('manufacturer', 'brand', 'merk', 'make') || '-').trim(),
+    serial_number: String(pick('serial_number', 'sn', 's_n', 'no_seri') || '-').trim(),
+    engine_number: String(pick('engine_number', 'engine_sn', 'no_engine') || '-').trim(),
+    commission_date: String(pick('commission_date', 'comm_date') || new Date().toISOString().slice(0, 10)).trim(),
+    pit_name: String(pick('pit_name', 'pit', 'location', 'site_pit') || 'Pit North').trim(),
+    cluster_name: String(pick('cluster_name', 'cluster') || 'Cluster Alpha').trim(),
+    cost_center: String(pick('cost_center', 'cc') || 'CC-GEN-001').trim(),
+    current_hm: currentHm,
+    current_km: currentKm,
+    current_fuel_pct: currentFuelPct,
+    status,
+    ai_risk_score: Number(pick('ai_risk_score', 'risk_score', 'ai_risk') || (status === 'BREAKDOWN' ? 85 : 18)),
+    ai_rul_hours: Number(pick('ai_rul_hours', 'rul', 'est_rul') || 5000)
+  };
+}
+
+async function syncUnitsFromGoogleSheet({ silent = false, replaceExisting = true } = {}) {
+  const baseUrl = getCsvFeedUrl();
+  const separator = baseUrl.includes('?') ? '&' : '?';
+  const url = `${baseUrl}${separator}_t=${Date.now()}`;
+
+  try {
+    const response = await fetch(url, { cache: 'no-store' });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status} saat mengambil data CSV`);
+    }
+
+    const csvText = await response.text();
+    if (/^\s*<!doctype html/i.test(csvText) || /<html/i.test(csvText)) {
+      throw new Error('Respons berupa halaman HTML, bukan CSV. Pastikan spreadsheet sudah di-Publish to web sebagai CSV.');
+    }
+
+    const workbook = XLSX.read(csvText, { type: 'string' });
+    const firstSheetName = workbook.SheetNames[0];
+    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheetName], { defval: '' });
+
+    const parsedUnits = rows
+      .map((row, idx) => normalizeSheetRow(row, idx))
+      .filter(Boolean);
+
+    if (!parsedUnits.length) {
+      throw new Error('CSV kosong atau kolom unit_code tidak ditemukan.');
+    }
+
+    if (replaceExisting) {
+      DB.units = parsedUnits;
+    } else {
+      const existingCodes = new Set(DB.units.map(u => u.unit_code));
+      parsedUnits.forEach(u => {
+        if (!existingCodes.has(u.unit_code)) DB.units.push(u);
+      });
+    }
+
+    window.BSS_CONFIG.IS_CSV_SYNCED = true;
+    updateConnectionBadge();
+    addAudit('GSHEET_CSV', 'AUTO_SYNC', 'UNIT_POPULATION', `Loaded ${parsedUnits.length} units from CSV feed`);
+    refreshAllModules();
+
+    if (!silent) {
+      Swal.fire('CSV Tersinkronisasi', `${parsedUnits.length} unit berhasil dimuat otomatis dari Google Spreadsheet CSV.`, 'success');
+    }
+    return true;
+  } catch (err) {
+    console.warn('[BSS CSV Sync]', err);
+    window.BSS_CONFIG.IS_CSV_SYNCED = false;
+    updateConnectionBadge();
+    if (!silent) {
+      Swal.fire('Gagal Sinkronisasi CSV', `${err.message}<br><small class="text-muted">Menampilkan data yang tersedia saat ini.</small>`, 'warning');
+    }
+    return false;
+  }
+}
+
+// ============================================================================
 // LOGIN, RBAC & NAVIGATION HANDLERS
 // ============================================================================
 function applyRolePreset() {
@@ -1387,7 +1510,6 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   const password = document.getElementById('loginPassword').value;
   const profile = ROLE_PERMISSIONS[roleName] || ROLE_PERMISSIONS['Admin'];
 
-  // Attempt Live Backend JWT Authentication first
   const authRes = await apiRequest('/auth/login', 'POST', { email, password });
   if (authRes.ok && authRes.data.token) {
     window.BSS_CONFIG.JWT_TOKEN = authRes.data.token;
@@ -1398,6 +1520,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   document.getElementById('loginScreen').style.display = 'none';
   applyRBACToUI();
   addAudit(DB.currentUser.name, 'LOGIN', 'AUTH', `${roleName} Session Started`);
+  await syncUnitsFromGoogleSheet({ silent: true, replaceExisting: true });
   refreshAllModules();
 });
 
@@ -1570,7 +1693,6 @@ function renderDashboardKPIs() {
   document.getElementById('kpiTotalCost').textContent = `$${totalCost.toLocaleString()}`;
   document.getElementById('kpiTopCostUnit').textContent = topCostUnit;
 
-  // Upcoming Schedule Mini-Table
   const schedBody = document.querySelector('#dashScheduleTable tbody');
   schedBody.innerHTML = DB.ppmSchedules.map(p => `
     <tr>
@@ -1581,7 +1703,6 @@ function renderDashboardKPIs() {
     </tr>
   `).join('');
 
-  // Live Activity Feed
   document.getElementById('dashActivityFeed').innerHTML = DB.auditLogs.slice(0, 7).map(a => `
     <div class="p-2 rounded border d-flex justify-content-between align-items-center small">
       <div><span class="badge bg-primary me-1">${a.module}</span> <strong>${a.user}</strong>: ${a.record}</div>
@@ -1989,6 +2110,7 @@ function renderPpmTable() {
 
 function scheduleNewPPM() {
   const u = DB.units[0];
+  if (!u) return;
   DB.ppmSchedules.unshift({
     ppm_id: 'ppm' + Date.now(), ppm_code: `PPM-2026-${Math.floor(600 + Math.random() * 300)}`,
     unit_id: u.unit_id, unit_code: u.unit_code, service_interval: 'PS1 (250H)',
@@ -2354,29 +2476,14 @@ function handleBulkUnitFile(event) {
     const wb = XLSX.read(evt.target.result, { type: 'binary' });
     const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
     rows.forEach((r, idx) => {
-      if (r.unit_code) {
-        DB.units.push({
-          unit_id: 'imp' + Date.now() + idx,
-          unit_code: String(r.unit_code).toUpperCase(),
-          equipment_category: r.equipment_category || 'Excavator',
-          model: r.model || 'PC2000-8',
-          manufacturer: r.manufacturer || 'Komatsu',
-          serial_number: r.serial_number || `SN-${Date.now()}-${idx}`,
-          engine_number: r.engine_number || 'ENG-001',
-          pit_name: r.pit_name || 'Pit North',
-          cluster_name: 'Cluster Alpha',
-          cost_center: r.cost_center || 'CC-OB-101',
-          current_hm: Number(r.current_hm || 0),
-          current_km: 0,
-          current_fuel_pct: 100,
-          status: 'RUNNING',
-          ai_risk_score: 12,
-          ai_rul_hours: 15000
-        });
+      const parsed = normalizeSheetRow(r, idx);
+      if (parsed) {
+        parsed.unit_id = 'imp' + Date.now() + idx;
+        DB.units.push(parsed);
       }
     });
     refreshAllModules();
-    Swal.fire('Bulk Import Complete', `${rows.length} units imported into Unit Population.`, 'success');
+    Swal.fire('Bulk Import Complete', `${rows.length} rows processed into Unit Population.`, 'success');
   };
   reader.readAsBinaryString(file);
 }
@@ -2389,10 +2496,16 @@ function backupDatabaseJson() {
   a.click();
 }
 
-// Initialize initial workspace state
-window.addEventListener('DOMContentLoaded', () => {
+// Initialize initial workspace state + auto-load CSV feed
+window.addEventListener('DOMContentLoaded', async () => {
   applyRBACToUI();
   refreshAllModules();
+
+  await syncUnitsFromGoogleSheet({ silent: true, replaceExisting: true });
+
+  setInterval(() => {
+    syncUnitsFromGoogleSheet({ silent: true, replaceExisting: true });
+  }, 300000);
 });
 </script>
 </body>
